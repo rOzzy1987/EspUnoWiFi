@@ -85,15 +85,16 @@ const char *head_frm =
     "%d\r\nConnection : close\r\n\r\n";
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload,
-                    size_t lenght) {
+                    size_t length) {
     switch (type) {
         case WStype_DISCONNECTED:
             break;
         case WStype_CONNECTED:
+            webSocket.sendTXT(num, "Connected\n");
             break;
         case WStype_TEXT:
         case WStype_BIN:
-            Serial.write(payload, lenght);
+            Serial.write(payload, length);
             break;
     }
 }
@@ -119,7 +120,7 @@ void load_eeprom() {
     if (strlen(econfig.apssid) == 0) {
         sprintf_P(econfig.apssid, PSTR("WIFI-ESP-SERIAL-%06x"),
                   ESP.getChipId());
-        strcpy_P(econfig.appswd, PSTR("oseppesp"));
+        // strcpy_P(econfig.appswd, PSTR("oseppesp"));
     }
 
     if (strlen(econfig.ssid) == 0) {
