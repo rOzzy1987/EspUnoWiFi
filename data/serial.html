@@ -5,69 +5,101 @@
     <meta http-equiv="pragma" content="no-cache" />
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Serial Monitor</title>
 
     <style type="text/css">
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+        html {
+            height: 100svh;
+            overflow-y: scroll;
         }
-
-        .top, .main {
-            width: 100%;
-            position: absolute;
-            overflow: hidden;
-        }
-
-        .top {
-            top: 0;
-            height: 40px;
-        }
-
-        .main {
-            top: 40px;
-            bottom: 0px;
-            overflow: auto;
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 0;
+            min-height: 100%;
         }
 
         #msgBar {
-            position: absolute;
+            display:flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 8px 24px;
             width: 100%;
             background-color: cadetblue;
         }
 
-            #msgBar * {
-                user-select: none;
-                -moz-user-select: none;
-                -webkit-user-select: none;
-                -ms-user-select: none;
-            }
+        #msgBar > div {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
 
-            #msgBar ul {
-                display: block;
-                margin-left: 10px;
-                margin-right: 10px;
-            }
+        #msgDiv {
+            flex-grow: 1;
+            white-space: pre;
+            font-family: monospace;
+            padding: 2px 8px;
+        }
 
-                #msgBar ul li {
-                    display: inline;
-                    line-height: 40px;
-                }
+        .ed-dd {
+            width: 120px;
+            height: 24px;
+            position: relative;
+        }
 
-            #msgBar li > * {
-                display: inline-block;
-            }
+        .ed-dd * {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        }
+
+        .ed-dd select {
+            width: 120px;
+        }
+
+        .ed-dd input {
+            width: 100px;
+        }
+
+        .baud-label {
+            font-size: 12pt;
+            margin-right: -18px;
+            height: 24px;
+            background: #FFF;
+            color: gray;
+            padding: 2px;
+            padding-right: 10px;
+            border-radius: 4px;
+        }
+
+        select, input {
+            font-size: 12pt;
+            white-space: pre;
+            border: none;
+            padding: 2px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        select:focus,
+        input:focus {
+            outline: none;
+        }
 
         .svg_icon {
             cursor: pointer;
-            width: 40px;
-            height: 40px;
+            width: 24px;
+            height: 24px;
             transition: fill-opacity 0.5s;
             -moz-transition: fill-opacity 0.5s; /* Firefox 4 */
             -webkit-transition: fill-opacity 0.5s; /* Safari 和 Chrome */
@@ -77,43 +109,22 @@
             fill-opacity: 0.7;
         }
 
-            .svg_icon:hover {
-                fill-opacity: 1;
-            }
-
-        .select-editable {
-            position: relative;
-            width: 120px;
-            height: 19px;
+        .svg_icon:hover {
+            fill-opacity: 1;
         }
 
-            .select-editable * {
-                position: absolute;
-                top: 5px;
-                left: 0px;
-            }
+        #msg { width: 100%; }
 
-            .select-editable select {
-                font-size: 14px;
-                border: none;
-                width: 120px;
-                margin: 0;
-                vertical-align: middle;
-                white-space: pre;
+        @media( max-width: 600px) {
+            #msgBar {
+                flex-direction: column-reverse;
+                gap: 8px;
+                padding: 8px 12px;
             }
+            .baud-label {display: none;}
+            #msg { width: 100%; height: 36px; font-size: 16pt; }
+        }
 
-            .select-editable input {
-                width: 100px;
-                padding: 1px;
-                font-size: 12px;
-                border: none;
-                vertical-align: middle;
-            }
-
-                .select-editable select:focus,
-                .select-editable input:focus {
-                    outline: none;
-                }
     </style>
 </head>
 <body>
@@ -126,70 +137,60 @@
             <path d="M464 256c0 114.875-93.125 208-208 208-61.51 0-116.771-26.709-154.847-69.153l74.847-74.847h-176v176l67.16-67.16c46.804 51.108 114.077 83.16 188.84 83.16 141.385 0 256-114.615 256-256h-48z"></path>
         </symbol>
     </svg>
-    <div id="msgBar" class="top">
-        <ul style="float: right">
-            <li>
-                <select id="line_ending">
-                    <option>No line ending</option>
-                    <option>Newline</option>
-                    <option>Carriage return</option>
-                    <option>Both NL&CR</option>
+    <div id="msgBar">
+        <div style="flex-grow: 1;">
+            <input id="msg" type="text" placeholder="Send message" onkeypress="sendIfEnter(event)" />
+        </div>
+        <div>
+            <span class="baud-label">Baud rate:</span>
+            <span class="ed-dd">
+                <select id="baud">
+                    <option>300</option>
+                    <option>1200</option>
+                    <option>2400</option>
+                    <option>4800</option>
+                    <option>9600</option>
+                    <option>14400</option>
+                    <option>19200</option>
+                    <option>28800</option>
+                    <option>38400</option>
+                    <option>57600</option>
+                    <option>74880</option>
+                    <option selected="selected">115200</option>
+                    <option>128000</option>
+                    <option>230400</option>
+                    <option>250000</option>
+                    <option>1000000</option>
+                    <option>2000000</option>
                 </select>
-            </li>
-            <li title="send text to uno">
-                <svg id="send" class="svg_icon" onclick="sendmsg()">
-                    <use xlink:href="#svg_sendtext" width="30px" height="30px" transform="translate(0,5)"></use>
-                </svg>
-            </li>
-            <li title="reset uno" onclick="resetUno()">
-                <svg class="svg_icon" id="reset">
-                    <use xlink:href="#svg_resetuno" width="26px" height="26px" transform="translate(0,7)"></use>
-                </svg>
-            </li>
-        </ul>
-        <ul style="float: left">
-            <li>Baudrate:</li>
-            <li>
-                <span class="select-editable">
-                    <select id="BandrateList">
-                        <option>300</option>
-                        <option>1200</option>
-                        <option>2400</option>
-                        <option>4800</option>
-                        <option>9600</option>
-                        <option>14400</option>
-                        <option>19200</option>
-                        <option>28800</option>
-                        <option>38400</option>
-                        <option>57600</option>
-                        <option>74880</option>
-                        <option selected="selected">115200</option>
-                        <option>128000</option>
-                        <option>230400</option>
-                        <option>250000</option>
-                        <option>1000000</option>
-                        <option>2000000</option>
-                    </select>
-                    <input id="SelectBandrate" type="text" />
-                </span>
-            </li>
-            <li>Message:</li>
-        </ul>
-        <ul style="overflow: hidden; display: block">
-            <li>
-                <input id="sendtext" type="text" style="width: 100%" onkeypress="sendIfEnter(event)" />
-            </li>
-        </ul>
+                <input id="baudtxt" type="text" />
+            </span>
+            <select id="lef">
+                <option value="-">No line ending</option>
+                <option value="n" selected="selected">Newline</option>
+                <option value="r">Carriage return</option>
+                <option value="rn">Both NL&CR</option>
+            </select>
+            <svg id="send" class="svg_icon" onclick="sendmsg()">
+                <use xlink:href="#svg_sendtext" width="24px" height="24px"></use>
+            </svg>
+            <svg id="reset" class="svg_icon" onclick="resetUno()">
+                <use xlink:href="#svg_resetuno" width="24px" height="24px"></use>
+            </svg>
+        </div>
+    </div>
 
-    </div>
-    <div id="msgDiv" class="main" style="background-color: darkgray">
-    </div>
+    <div id="msgDiv" style="background-color: darkgray"></div>
     <script>
+        var _baudTxt = document.getElementById("baudtxt");
+        var _baudDd = document.getElementById("baud");
+        var _msg = document.getElementById("msg");
+
         var updateBaudrate = function (baudrate) {
             var getBaudrate = new XMLHttpRequest();
 
             getBaudrate.onload = function () {
-                document.getElementById("SelectBandrate").value = this.responseText;
+                _baudTxt.value = this.responseText;
             };
             var hostString = '/getbaudrate';
             if (baudrate) parseInt(baudrate, 10);
@@ -200,18 +201,18 @@
             getBaudrate.send();
         }
 
-        document.getElementById("SelectBandrate").onchange = function () {
+        _baudTxt.onchange = function () {
             updateBaudrate(this.value);
         }
 
-        document.getElementById("BandrateList").onchange = function () {
-            if (document.getElementById("SelectBandrate").value != this.value) {
-                document.getElementById("SelectBandrate").value = this.value;
-                document.getElementById("SelectBandrate").onchange();
+        _baudDd.onchange = function () {
+            if (_baudTxt.value != this.value) {
+                _baudTxt.value = this.value;
+                _baudTxt.onchange();
             }
         };
-        document.getElementById("BandrateList").onclick = function () {
-            document.getElementById("BandrateList").selectedIndex = -1;
+        _baudDd.onclick = function () {
+            _baudDd.selectedIndex = -1;
         };
 
         updateBaudrate();
@@ -221,6 +222,31 @@
             xhr.open('POST', '/log/reset', false);
             xhr.send();
         };
+        
+        var sendmsg = function () {
+            var text = _msg.value;
+            var line_ending = document.getElementById("lef").value;
+            if (!text) return;
+            switch (line_ending) {
+                case "n":
+                    text += "\n";
+                    break;
+                case "r":
+                    text += "\r";
+                    break;
+                case "rn":
+                    text += "\n\r";
+            }
+            if (socket.readyState == 1) socket.send(text);
+            _msg.focus();
+            _msg.select();
+        };
+        var sendIfEnter = function (event) {
+            if (event.keyCode == 13) {
+                sendmsg();
+            }
+        };
+
         var ip_addr = document.location.hostname;
         var socket = new WebSocket('ws://' + ip_addr + ':81/', ['arduino']);
         socket.onopen = function (event) {
@@ -252,29 +278,6 @@
         socket.onerror = function (event) {
             document.getElementById("msgDiv").style.cssText = "background-color:darkgray";
             document.title = "Serial Monitor Disconnected";
-        };
-        var sendmsg = function () {
-            var text = document.getElementById("sendtext").value;
-            var line_ending = document.getElementById("line_ending").value;
-            if (!text) return;
-            switch (line_ending) {
-                case "Newline":
-                    text += "\n";
-                    break;
-                case "Carriage return":
-                    text += "\r";
-                    break;
-                case "Both NL&CR":
-                    text += "\n\r";
-            }
-            if (socket.readyState == 1) socket.send(text);
-            document.getElementById("sendtext").focus();
-            document.getElementById("sendtext").select();
-        };
-        var sendIfEnter = function (event) {
-            if (event.keyCode == 13) {
-                sendmsg();
-            }
         };
     </script>
 </body>
