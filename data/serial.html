@@ -24,7 +24,8 @@
             flex-direction: column;
             justify-content: space-between;
             gap: 0;
-            min-height: 100%;
+            height: 100svh;
+            font-family: sans-serif;
         }
 
         #msgBar {
@@ -49,6 +50,7 @@
             white-space: pre;
             font-family: monospace;
             padding: 2px 8px;
+            overflow: scroll;
         }
 
         .ed-dd {
@@ -115,7 +117,41 @@
 
         #msg { width: 100%; }
 
-        @media( max-width: 600px) {
+        .msgl { clear:both; }
+        .msgl .stamp {
+            opacity: .3;
+            padding-right: 8px;
+            float: left;
+        }
+        .msgl .msg {
+            display: inline-block;
+        }
+        
+        #ovrly {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            position: fixed;
+            width: 100svW;
+            height: 100svh;
+            background: rgba(0,0,0,0.5);
+            color:#FFF;
+            z-index: 100;
+        }
+
+        #ovrly a:link, #ovrly a:visited,
+        #ovrly a:active {
+            color: #FFF;
+            background-color: cadetblue;
+            text-decoration: none;
+            padding: 8px 24px;
+            font-size: 16pt;
+            border-radius: 20px;
+        }
+
+        @media( max-width: 700px) {
             #msgBar {
                 flex-direction: column-reverse;
                 gap: 8px;
@@ -123,6 +159,13 @@
             }
             .baud-label {display: none;}
             #msg { width: 100%; height: 36px; font-size: 16pt; }
+        }
+
+        @media (max-width: 400px){
+            .msgl .stamp {
+                display: none;
+            }
+
         }
 
     </style>
@@ -181,10 +224,14 @@
     </div>
 
     <div id="msgDiv" style="background-color: darkgray"></div>
+    
+    <div id="ovrly"><p>Disconnected.</p><a href="#" onclick="reconnect">Reconnect?</a></div>
     <script>
         var _baudTxt = document.getElementById("baudtxt");
         var _baudDd = document.getElementById("baud");
         var _msg = document.getElementById("msg");
+        var _msgDiv = document.getElementById("msgDiv");
+        var _ovrly = document.getElementById("ovrly");
 
         var updateBaudrate = function (baudrate) {
             var getBaudrate = new XMLHttpRequest();
@@ -237,7 +284,7 @@
                 case "rn":
                     text += "\n\r";
             }
-            if (socket.readyState == 1) socket.send(text);
+            if (_socket.readyState == 1) _socket.send(text);
             _msg.focus();
             _msg.select();
         };
@@ -247,38 +294,90 @@
             }
         };
 
-        var ip_addr = document.location.hostname;
-        var socket = new WebSocket('ws://' + ip_addr + ':81/', ['arduino']);
-        socket.onopen = function (event) {
-            document.getElementById("msgDiv").style.cssText = "";
-            document.title = "Serial Monitor at " + document.location.hostname;
+        var socketClosed = function(){
+            document.title = "Serial Monitor Disconnected";
+            _ovrly.style.cssText = "";
         };
-        socket.onmessage = function (event) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                var rxdata = reader.result;
-                var el = document.getElementById("msgDiv");
-                var scroll = el.scrollHeight - el.clientHeight - el.scrollTop;
-                var chile = document.createElement("span");
-                chile.innerText = rxdata;
-                el.appendChild(chile);
-                if (scroll < chile.offsetHeight * 1.5) {
-                    if (el.childNodes.length > 300) {
-                        while (el.childNodes.length > 200) el.removeChild(el.childNodes[0]);
-                    }
-                    el.scrollTop = el.scrollHeight;
-                };
+
+        
+
+        var _lastMessageComplete = true;
+        var displayMessage = function(msg){
+            var el = _msgDiv;
+            var scroll = el.scrollHeight - el.clientHeight - el.scrollTop;
+
+            if (_lastMessageComplete) {
+                var date = new Date();
+
+                var stampEl = document.createElement("span");
+                stampEl.classList.add("stamp");
+                stampEl.innerHTML = date.getHours().toFixed().padStart(2,"0")
+                    +":"+date.getMinutes().toFixed().padStart(2, "0")
+                    +":"+date.getSeconds().toFixed().padStart(2, "0");
+
+                var msgEl = document.createElement("span");
+                msgEl.classList.add("msg");
+                msgEl.innerText = msg;
+
+                var lineEl = document.createElement("div");
+                lineEl.classList.add("msgl");
+                lineEl.appendChild(stampEl);
+                lineEl.appendChild(msgEl);
+                el.appendChild(lineEl);
+            } else {
+                var lineEl = el.children[el.children.length-1];
+                var msgEl = lineEl.children[1];
+                msgEl.innerHTML += msg;
             }
-            reader.readAsText(event.data);
-        };
-        socket.onclose = function (event) {
-            document.getElementById("msgDiv").style.cssText = "background-color:darkgray";
-            document.title = "Serial Monitor Disconnected";
-        };
-        socket.onerror = function (event) {
-            document.getElementById("msgDiv").style.cssText = "background-color:darkgray";
-            document.title = "Serial Monitor Disconnected";
-        };
+
+
+            _lastMessageComplete = msg.substring(msg.length-1) == "\n";
+
+            if (scroll < lineEl.offsetHeight * 1.5) {
+                if (el.childNodes.length > 300) {
+                    while (el.childNodes.length > 200) el.removeChild(el.childNodes[0]);
+                }
+                el.scrollTop = el.scrollHeight;
+            };
+        }
+
+        var _host = document.location.hostname;
+        var _socket = {readyState: -1};
+
+        var reconnect = function(){
+            // _socket = new WebSocket('ws://192.168.0.169:81/', ['arduino']);
+            socket = new WebSocket('ws://' + _host + ':81/', ['arduino']);
+            _socket.onopen = function (event) {
+                document.getElementById("msgDiv").style.cssText = "";
+                document.title = "Serial Monitor at " + _host;
+            };
+            _socket.onmessage = function (event) {
+                try {
+                    var d = event.data;
+                    if (typeof(d) == "string") {
+                        displayMessage(d);
+                    }
+                    else {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            displayMessage(reader.result);
+                        }
+                        reader.readAsText(event.data);
+                    }
+                }
+                catch (error){
+                    console.log(error);
+                    _socket.close();
+                    socketClosed();
+                }
+            };
+            _socket.onclose = function (event) {socketClosed();};
+            _socket.onerror = function (event) {socketClosed();};
+            _ovrly.style.display = "none";
+            return false;
+        }
+
+        reconnect();
     </script>
 </body>
 </html>
