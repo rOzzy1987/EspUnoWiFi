@@ -182,7 +182,7 @@
     </svg>
     <div id="msgBar">
         <div style="flex-grow: 1;">
-            <input id="msg" type="text" placeholder="Send message" onkeypress="sendIfEnter(event)" />
+            <input id="msg" type="text" placeholder="Send message" />
         </div>
         <div>
             <span class="baud-label">Baud rate:</span>
@@ -217,96 +217,76 @@
             <svg id="send" class="svg_icon" onclick="sendmsg()">
                 <use xlink:href="#svg_sendtext" width="24px" height="24px"></use>
             </svg>
-            <svg id="reset" class="svg_icon" onclick="resetUno()">
+            <svg id="reset" class="svg_icon" onclick="ArduinoSerial.reset()">
                 <use xlink:href="#svg_resetuno" width="24px" height="24px"></use>
             </svg>
         </div>
     </div>
 
-    <div id="msgDiv" style="background-color: darkgray"></div>
+    <div id="msgDiv"></div>
     
-    <div id="ovrly"><p>Disconnected.</p><a href="#" onclick="reconnect">Reconnect?</a></div>
+    <div id="ovrly"><p>Disconnected.</p><a href="#" onclick="ArduinoSerial.connect(); return false;">Reconnect?</a></div>
+    <script src="serial.js"></script>
     <script>
-        var _baudTxt = document.getElementById("baudtxt");
-        var _baudDd = document.getElementById("baud");
-        var _msg = document.getElementById("msg");
-        var _msgDiv = document.getElementById("msgDiv");
-        var _ovrly = document.getElementById("ovrly");
+        window.onload = function(){
+            var _baudTxt = document.getElementById("baudtxt");
+            var _baudDd = document.getElementById("baud");
+            var _msg = document.getElementById("msg");
+            var _msgDiv = document.getElementById("msgDiv");
+            var _ovrly = document.getElementById("ovrly");
 
-        var updateBaudrate = function (baudrate) {
-            var getBaudrate = new XMLHttpRequest();
+            // BAUD editable dropdown
 
-            getBaudrate.onload = function () {
-                _baudTxt.value = this.responseText;
+            _baudTxt.onchange = function () {
+                ArduinoSerial.setBaud(this.value);
+            }
+
+            _baudDd.onchange = function () {
+                if (_baudTxt.value != this.value) {
+                    _baudTxt.value = this.value;
+                    _baudTxt.onchange();
+                }
             };
-            var hostString = '/getbaudrate';
-            if (baudrate) parseInt(baudrate, 10);
-            if (baudrate) {
-                hostString += "?baudrate=" + baudrate;
-            }
-            getBaudrate.open('GET', hostString);
-            getBaudrate.send();
-        }
+            _baudDd.onclick = function () {
+                _baudDd.selectedIndex = -1;
+            };
 
-        _baudTxt.onchange = function () {
-            updateBaudrate(this.value);
-        }
 
-        _baudDd.onchange = function () {
-            if (_baudTxt.value != this.value) {
-                _baudTxt.value = this.value;
-                _baudTxt.onchange();
-            }
-        };
-        _baudDd.onclick = function () {
-            _baudDd.selectedIndex = -1;
-        };
+            // Messaging logic
+            _msg.onkeyup = function (event) {
+                if (event.keyCode == 13) {
+                    sendmsg();
+                }
+            };
+            
+            var sendmsg = function () {
+                var text = _msg.value;
+                var line_ending = document.getElementById("lef").value;
+                if (!text) return;
+                switch (line_ending) {
+                    case "n":
+                        text += "\n";
+                        break;
+                    case "r":
+                        text += "\r";
+                        break;
+                    case "rn":
+                        text += "\n\r";
+                }
+                ArduinoSerial.send(text);
+                _msg.focus();
+                _msg.select();
+            };
 
-        updateBaudrate();
+            var socketClosed = function(){
+                document.title = "Serial Monitor Disconnected";
+                _ovrly.style.cssText = "";
+            };
 
-        var resetUno = function () {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', '/log/reset', false);
-            xhr.send();
-        };
-        
-        var sendmsg = function () {
-            var text = _msg.value;
-            var line_ending = document.getElementById("lef").value;
-            if (!text) return;
-            switch (line_ending) {
-                case "n":
-                    text += "\n";
-                    break;
-                case "r":
-                    text += "\r";
-                    break;
-                case "rn":
-                    text += "\n\r";
-            }
-            if (_socket.readyState == 1) _socket.send(text);
-            _msg.focus();
-            _msg.select();
-        };
-        var sendIfEnter = function (event) {
-            if (event.keyCode == 13) {
-                sendmsg();
-            }
-        };
+            var displayMessage = function(msg){
+                var el = _msgDiv;
+                var scroll = el.scrollHeight - el.clientHeight - el.scrollTop;
 
-        var socketClosed = function(){
-            document.title = "Serial Monitor Disconnected";
-            _ovrly.style.cssText = "";
-        };
-
-        
-
-        var _lastMessageComplete = true;
-        var displayMessage = function(msg){
-            var el = _msgDiv;
-            var scroll = el.scrollHeight - el.clientHeight - el.scrollTop;
-
-            if (_lastMessageComplete) {
                 var date = new Date();
 
                 var stampEl = document.createElement("span");
@@ -323,61 +303,35 @@
                 lineEl.classList.add("msgl");
                 lineEl.appendChild(stampEl);
                 lineEl.appendChild(msgEl);
+
                 el.appendChild(lineEl);
-            } else {
-                var lineEl = el.children[el.children.length-1];
-                var msgEl = lineEl.children[1];
-                msgEl.innerHTML += msg;
+
+                if (scroll < lineEl.offsetHeight * 1.5) {
+                    if (el.childNodes.length > 300) {
+                        while (el.childNodes.length > 200) el.removeChild(el.childNodes[0]);
+                    }
+                    el.scrollTop = el.scrollHeight;
+                };
             }
 
+            // Serial setup
 
-            _lastMessageComplete = msg.substring(msg.length-1) == "\n";
-
-            if (scroll < lineEl.offsetHeight * 1.5) {
-                if (el.childNodes.length > 300) {
-                    while (el.childNodes.length > 200) el.removeChild(el.childNodes[0]);
-                }
-                el.scrollTop = el.scrollHeight;
+            ArduinoSerial.onError = socketClosed;
+            ArduinoSerial.onClose = socketClosed;
+            ArduinoSerial.onOpen = function (event) {
+                var host = document.location.hostname;
+                displayMessage(`----------- Connected to ${host} -----------`);
+                document.title = `Serial Monitor at ${host}`;
+                _ovrly.style.display = "none";
             };
+            ArduinoSerial.onMessage = displayMessage;
+
+            // Page setup
+
+            ArduinoSerial.getBaud(function(v){_baudTxt.value = v;});
+
+            ArduinoSerial.connect();
         }
-
-        var _host = document.location.hostname;
-        var _socket = {readyState: -1};
-
-        var reconnect = function(){
-            // _socket = new WebSocket('ws://192.168.0.169:81/', ['arduino']);
-            socket = new WebSocket('ws://' + _host + ':81/', ['arduino']);
-            _socket.onopen = function (event) {
-                document.getElementById("msgDiv").style.cssText = "";
-                document.title = "Serial Monitor at " + _host;
-            };
-            _socket.onmessage = function (event) {
-                try {
-                    var d = event.data;
-                    if (typeof(d) == "string") {
-                        displayMessage(d);
-                    }
-                    else {
-                        var reader = new FileReader();
-                        reader.onload = function (e) {
-                            displayMessage(reader.result);
-                        }
-                        reader.readAsText(event.data);
-                    }
-                }
-                catch (error){
-                    console.log(error);
-                    _socket.close();
-                    socketClosed();
-                }
-            };
-            _socket.onclose = function (event) {socketClosed();};
-            _socket.onerror = function (event) {socketClosed();};
-            _ovrly.style.display = "none";
-            return false;
-        }
-
-        reconnect();
     </script>
 </body>
 </html>

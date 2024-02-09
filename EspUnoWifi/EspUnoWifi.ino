@@ -23,7 +23,7 @@
 #include <math.h>
 #include <pgmspace.h>
 
-#include "html.h"
+#include "resources.h"
 
 const char default_router_ssid[] = "";  // your router ssid
 const char default_router_pswd[] = "";  // your router password
@@ -164,15 +164,10 @@ void setup() {
     Udp.begin(82);
 }
 
-void joy_html(WiFiClient wc) {
-    wc.printf(head_frm, 200, sizeof(joy_text));
-    wc.write_P(joy_text, sizeof(joy_text));
-}
 
-void serial_html(WiFiClient wc) {
-    wc.printf(head_frm, 200, sizeof(serial_text));
-    wc.write_P(serial_text, sizeof(serial_text));
-}
+// somehow null is added at the end so we decrease size by 1
+#define  fileResponse(wc, resource) wc.printf(head_frm, 200, sizeof(resource) - 1); \
+                                    wc.write_P(resource, sizeof(resource) - 1);
 
 void netstat_html(WiFiClient wc) {
     wc.setTimeout(10000);
@@ -199,8 +194,8 @@ void netstat_html(WiFiClient wc) {
     String dns = WiFi.dnsIP().toString();
     dlen += dns.length() - 2;
 
-    wc.printf(head_frm, 200, strlen_P(index_text) + dlen);
-    wc.printf_P(index_text, econfig.apssid, wifi_option.c_str(), econfig.ssid,
+    wc.printf(head_frm, 200, strlen_P(res_index_html) + dlen);
+    wc.printf_P(res_index_html, econfig.apssid, wifi_option.c_str(), econfig.ssid,
                 localip.c_str(), subnet.c_str(), gateway.c_str(), dns.c_str());
 }
 
@@ -261,8 +256,8 @@ void setssid(byte isAP, WiFiClient wc) {
         if (pos == sizeof(key)) break;
     }
 
-    wc.printf(head_frm, 200, sizeof(redir_text));
-    wc.write_P(redir_text, sizeof(redir_text));
+    fileResponse(wc, res_redir_html);
+
     save_eeprom();
     if (isAP) {
         strcpy(econfig.apssid, tssid);
@@ -497,11 +492,13 @@ void loop() {
                 String respone(econfig.bardrate);
                 avrOTA_client.printf(head_frm, 200, respone.length());
                 avrOTA_client.print(respone);
-            } else if (s.indexOf("joy") > 0) {
-                joy_html(avrOTA_client);
+            } else if (s.indexOf("pendant") > 0) {
+                fileResponse(avrOTA_client, res_pendant_html);
+            } else if (s.indexOf("serial.js") > 0) {
+                fileResponse(avrOTA_client, res_serial_js);
             } else if ((s.indexOf("index") > 0) || (s.indexOf(" / ") > 0) ||
                        (s.indexOf("serial") > 0)) {
-                serial_html(avrOTA_client);
+                fileResponse(avrOTA_client, res_serial_html);
             } else {
                 avrOTA_client.printf(head_frm, 404, 0);
             }
