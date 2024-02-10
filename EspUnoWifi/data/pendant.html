@@ -58,7 +58,7 @@
             gap: 48px;
             width:  100%;
         }
-        #dro .cat {
+        .cat {
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -69,35 +69,43 @@
             padding: 16px;
             box-shadow: inset 3px 3px #FFF;
         }
-        #dro .dsp {
+        .dsp {
             display: flex;
             align-items: baseline;
             justify-content: space-between;
             gap: 24px;
         }
-        #dro .name, #dro .unit, 
-        #dro .title {
+        .name,
+        .unit, 
+        .title {
             color: #BCD;
             font-weight: bold;
             width: 75px;
         }
-        #dro .title {
+        .title {
             text-transform: uppercase;
             font-size: 12px;
             margin-bottom: -24px;
         }
-        #dro .val {
+        .val {
             flex-grow: 1;
             font-family: 'Workbench', monospace;
             font-size: 48px;
             text-align: right;
             color: #0A0;
+            background: #313;
+            border:none;
         }
+        input.val {
+            border: 1px solid #424;
+            border-radius: 4px;
+        }
+
 
         
         /******************* Keyboard ******************/
 
-        #kb, #kb .group, #kb .vgroup {
+        #kb, .group, .vgroup {
             display: flex;
             gap: 16px;
         }
@@ -105,19 +113,19 @@
         #kb {
             flex-wrap: wrap;
         }
-        #kb .vgroup {
+        .vgroup {
             flex-direction: column;
         }
 
-        #kb .key, #kb .empty {
+        .key, .empty {
             height: 60px;
             width: 60px;
             font-size: 24px;
             line-height: 24px;
         }
 
-        #kb .key {
-            padding: 18px 8px;
+        .key {
+            padding: 18px 0px;
             text-align: center;
             position: relative;
             border: 1px solid #000;
@@ -127,46 +135,55 @@
             cursor: pointer;
         }
 
-        #kb .key:hover {
+        .key:hover {
             box-shadow: 8px 8px 8px rgba(0,0,0,.4);
         }
 
-        #kb .key:active {
+        .key:active {
             top: 4px;
             left: 4px;
             box-shadow: 0 0 8px rgba(0,0,0,.4);
         }
 
-        #kb .group.ctrl .key {
+        .key.lg {
             width: 136px;
         }
-        #kb .key sub {
+        .key.hg {
+            height: 136px;
+            padding: 53px 0;
+            margin-bottom: -76px;
+        }
+        .key sub {
             font-size: 12px;
         }
 
-        #kb .key.lgt{
+        .key.lgt{
             background: #fed;
         }
 
-        #kb .key.red {
+        .key.red {
             color: #FFF;
             background: #A00;
         }
 
-        #kb .key.ylw {
+        .key.ylw {
             background: #DD3;
         }
 
-        #kb .key.lbl {
+        .key.lbl {
             background: #8AF;
         }
+        .key.dbl {
+            background: #259;
+            color:#FFF;
+        }
 
-        #kb .key.grn {
+        .key.grn {
             color: #FFF;
             background: #060;
         }
 
-        #kb .key.onoff:before {
+        .key.onoff:before {
             content: '\2B24';
             color: #300;
             position: absolute;
@@ -174,7 +191,7 @@
             left: 3px;
             font-size: 12px;
         }
-        #kb .key.onoff.active:before {
+        .key.onoff.active:before {
             color: #F00;
         }
 
@@ -182,36 +199,36 @@
             #dro {
                 gap: 12px;
             }
-            #dro .title {
+            .title {
                 display: none;
                 text-transform: uppercase;
                 font-size: 12px;
                 margin-bottom: 0;
             }
 
-            #dro .cat {
+            .cat {
                 flex-direction: row;
                 flex-wrap: wrap;
                 flex-grow: 1;
             }
 
-            #dro .cat.mchn {
+            .cat.mchn {
                 display: none;
             }
 
-            #dro .val {
+            .val {
                 font-size: 24px;
                 flex-grow: 0;
             }
 
-            #dro .unit {
+            .unit {
                 display: none;
             }
 
-            #kb, #kb .group, #kb .vgroup {
+            #kb, .group, .vgroup {
                 gap: 10px;
             }
-            #kb .key, #kb .empty {
+            .key, .empty {
                 padding: 14px 5px;
                 width: 48px;
                 height: 48px;
@@ -219,10 +236,15 @@
                 line-height: 19px;
             }
 
-            #kb .group.ctrl .key {
+            .key.lg {
                 width: 106px;
             }
-            #kb .key sub {
+            .key.hg {
+                height: 106px;
+                margin-bottom: -58px;
+                padding: 43px 0;
+            }
+            .key sub {
                 font-size: 10px;
             }
 
@@ -287,10 +309,11 @@
     </div>
     <div id="kb">
         <div class="vgroup">
-            <div class="group ctrl">
-                <div class="key red" data-gcode="&#x18;">Stop</div>
-                <div class="key ylw" data-gcode="!">Pause</div>
-                <div class="key ylw" data-gcode="~">Start</div>
+            <div class="group">
+                <div class="key lg red" data-gcode="&#x18;">&#x2BC3; Stop</div>
+                <div class="key ylw" data-gcode="!">&#x2595; &#x258F;</div>
+                <div class="key ylw" data-gcode="~">&#x25B7;</div>
+                <div class="key grn" data-gcode="$X" title="Clear alarm">&#x2BBF;</div>
             </div>
             <div class="group">
                 <div class="vgroup">
@@ -318,6 +341,10 @@
                     <div class="key red" data-cmd="spn" data-arg="50">S<sub>50</sub></div>
                 </div>
             </div>
+            <div class="group">
+                <div class="key lbl" title="Reconnect" data-cmd="conn">&#x27f3;</div>
+                <div class="key ylw" title="Reset" data-cmd="rst">&#x2A3B;</div>
+            </div>
         </div>
         <div class="group">
             <div class="vgroup">
@@ -326,28 +353,27 @@
                     <div class="led st spn">Spn</div>
                     <div class="led st cln">Cln</div>
                 </div>
-                <div class="key lgt" data-cmd="jg" data-arg="X-">&#x25C0;</div>
+                <div class="key lgt" data-cmd="jg" data-arg="X-">&#X2B9C;</div>
+                <div class="key lgt" data-cmd="jg" data-arg="Z-">Z-</div>
                 <div class="key" data-cmd="jh" data-arg="X">X<sub>&#x21D2;0</sub></div>
             </div>
             <div class="vgroup">
-                <div class="key lgt" data-cmd="jg" data-arg="Y">&#x25B2;</div>
+                <div class="key lgt" data-cmd="jg" data-arg="Y">&#x2B9D;</div>
                 <div class="key" data-gcode="$H">&#x2302;</div>
-                <div class="key lgt" data-cmd="jg" data-arg="Y-">&#x25BC;</div>
-            </div>
-            <div class="vgroup">
-                <div class="empty"></div>
-                <div class="key lgt" data-cmd="jg" data-arg="X">&#x25B6;</div>
+                <div class="key lgt" data-cmd="jg" data-arg="Y-">&#x2B9F;</div>
                 <div class="key" data-cmd="jh" data-arg="Y">Y<sub>&#x21D2;0</sub></div>
             </div>
             <div class="vgroup">
+                <div class="empty"></div>
+                <div class="key lgt" data-cmd="jg" data-arg="X">&#x2B9E;</div>
                 <div class="key lgt" data-cmd="jg" data-arg="Z">Z+</div>
                 <div class="key" data-cmd="jh" data-arg="Z">Z<sub>&#x21D2;0</sub></div>
-                <div class="key lgt" data-cmd="jg" data-arg="Z-">Z-</div>
             </div>
             <div class="vgroup">
                 <div class="key onoff" data-cmd="js" data-arg="100">100</div>
                 <div class="key onoff" data-cmd="js" data-arg="10">10</div>
                 <div class="key onoff" data-cmd="js" data-arg="1">1</div>
+                <div class="key onoff" data-cmd="js" data-arg="0.1">0.1</div>
             </div>
             <div class="vgroup">
                 <div class="key onoff" data-cmd="jf" data-arg="100" data-gcode="F100">F<sub>100</sub></div>
@@ -355,13 +381,62 @@
                 <div class="key onoff" data-cmd="jf" data-arg="10000" data-gcode="F10000">F<sub>10k</sub></div>
             </div>
         </div>
-        <div class="group">
-
-            <div class="key ylw" data-gcode="$X" title="Clear alarm">A!</div>
-            <div class="key lbl" title="Reconnect" data-cmd="conn">&#x267A;</div>
-            <div class="key ylw" title="Reset" data-cmd="rst">R</div>
+    </div>
+    
+    <div class="group ji">
+        <div class="vgroup">
+            <div class="cat">
+                <div class="title">jog to</div>
+                <div class="dsp">
+                    <div class="name">X</div>
+                    <input class="val x" value="612.3" />
+                    <div class="unit l">mm</div>
+                </div>
+                <div class="dsp">
+                    <div class="name">Y</div>
+                    <input class="val y" value="34.2" />
+                    <div class="unit l">mm</div>
+                </div>
+                <div class="dsp">
+                    <div class="name">Z</div>
+                    <input class="val z" value="23.1" />
+                    <div class="unit l">mm</div>
+                </div>
+            </div>
+            <div class="group">
+                <div class="key onoff lbl x">X</div>
+                <div class="key onoff lbl y">Y</div>
+                <div class="key onoff lbl z">Z</div>
+                <div class="key onoff st abs">Abs</div>
+                <div class="key rld x">RX</div>
+                <div class="key rld y">RY</div>
+                <div class="key rld z">RZ</div>
+            </div>
         </div>
-
+        <div class="vgroup np">
+            <div class="group">
+                <div class="key dbl lit">7</div>
+                <div class="key dbl lit">8</div>
+                <div class="key dbl lit">9</div>
+                <div class="key ylw bks">&lt;</div>
+            </div>
+            <div class="group">
+                <div class="key dbl lit">4</div>
+                <div class="key dbl lit">5</div>
+                <div class="key dbl lit">6</div>
+                <div class="key lbl lit">-</div>
+            </div>
+            <div class="group">
+                <div class="key dbl lit">1</div>
+                <div class="key dbl lit">2</div>
+                <div class="key dbl lit">3</div>
+                <div class="key hg jog">&#x2713;</div>
+            </div>
+            <div class="group">
+                <div class="key lg dbl lit">0</div>
+                <div class="key lbl dec">.</div>
+            </div>
+        </div>
     </div>
     <script>
         window.onload = function() {
@@ -718,7 +793,8 @@
 
             ArduinoSerial.connect();
 
-            runSelectorOp(".key", (e) => e.onclick = handleKey);
+            runSelectorOp("#kb .key", (e) => e.onclick = handleKey);
+            runSelectorOp(".ji .key", (e) => e.onclick = handleJogKey);
         }
     </script>
 </body>
