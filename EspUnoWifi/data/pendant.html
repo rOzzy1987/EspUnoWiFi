@@ -365,9 +365,8 @@
     </div>
     <script>
         window.onload = function() {
-            
-            // var l = console.log;
-            var l = function(){};
+
+            const ArduinoSerial = globalThis.ArduinoSerial;
 
             var runSelectorOp = function(selector, op){
                 for (var l of document.querySelectorAll(selector)){
@@ -447,7 +446,7 @@
             };
 
             var updateAbsolute= function(){
-                setActive(".st.abs",status.isActive);
+                setActive(".st.abs",status.isAbsolute);
             }
             var setAbsolute = function(val) {
                 if (status.isAbsolute == val) return;
@@ -537,6 +536,7 @@
             var parseGrblStatus =  function(data) {
                 var codes = data.split(' ');
                 for(var code of codes) {
+                    code = code.toUpperCase()
                     if (code == "G21") setMetric(true);
                     if (code == "G20") setMetric(false);
                     if (code == "G90") setAbsolute(true);
@@ -612,7 +612,9 @@
             var handleKey = function(e) {
                 var key = e.currentTarget;
                 var _s = (_d) => {
-                    l("[PND]", _d);
+                    /* debug */
+                    console.log("[PND]", _d);
+                    /* end */
                     ArduinoSerial.send(_d+"\n");
                 }
 
@@ -670,7 +672,7 @@
                             ArduinoSerial.reset();
                             break;
                         default: 
-                            l("[PND] Unknown key", cmd, arg);
+                            console.error("[PND] Unknown key", cmd, arg);
                             break;
                     }
                 }

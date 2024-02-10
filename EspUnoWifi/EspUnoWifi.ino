@@ -23,7 +23,9 @@
 #include <math.h>
 #include <pgmspace.h>
 
+#include "favicon.h"
 #include "resources.h"
+#include "basicHttp.h"
 
 const char default_router_ssid[] = "";  // your router ssid
 const char default_router_pswd[] = "";  // your router password
@@ -37,8 +39,9 @@ typedef struct {
     char pswd[32];
     char apssid[32];
     char appswd[32];
-    unsigned int bardrate;
-    unsigned int bardrate_isp;
+    unsigned int baudrate;
+    unsigned int baudrate_isp;
+    char hostName[32];
 } EEPROM_CONFIG;
 EEPROM_CONFIG econfig;
 #pragma pack(pop)
@@ -79,10 +82,6 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 inline uint8_t ctoh(char c) {
     return (c & 0x10) ? /*0-9*/ c & 0xf : /*A-F, a-f*/ (c & 0xf) + 9;
 }
-const char *head_frm =
-    "HTTP/1.1 %d OK\r\nContent-Type: "
-    "text/html\r\nAccess-Control-Allow-Origin:*\r\nContent-Length: "
-    "%d\r\nConnection : close\r\n\r\n";
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t *payload,
                     size_t length) {
@@ -113,10 +112,10 @@ void load_eeprom() {
         econfig.flag[1] = 0x55;
         save_eeprom();
     }
-    if (econfig.bardrate == 0 || econfig.bardrate > 2000000)
-        econfig.bardrate = 115200;
-    if (econfig.bardrate_isp == 0 || econfig.bardrate_isp > 2000000)
-        econfig.bardrate_isp = 115200;
+    if (econfig.baudrate == 0 || econfig.baudrate > 2000000)
+        econfig.baudrate = 115200;
+    if (econfig.baudrate_isp == 0 || econfig.baudrate_isp > 2000000)
+        econfig.baudrate_isp = 115200;
     if (strlen(econfig.apssid) == 0) {
         sprintf_P(econfig.apssid, PSTR("WIFI-ESP-SERIAL-%06x"),
                   ESP.getChipId());
@@ -132,7 +131,7 @@ void load_eeprom() {
 void setup() {
     EEPROM.begin(eeprom_size);
     load_eeprom();
-    Serial.begin(econfig.bardrate);
+    Serial.begin(econfig.baudrate);
     Serial.print("ssid:");
     Serial.println(econfig.ssid);
     Serial.print("pswd:");
@@ -164,23 +163,27 @@ void setup() {
     Udp.begin(82);
 }
 
+void netstat_json(WiFiClient* wc) {
+    wc->setTimeout(10000);
+    int dlen = 
+        (strlen(econfig.apssid) -2) +
+        (strlen(econfig.ssid) -2) +
+        (strlen(econfig.appswd) -2);
 
-// somehow null is added at the end so we decrease size by 1
-#define  fileResponse(wc, resource) wc.printf(head_frm, 200, sizeof(resource) - 1); \
-                                    wc.write_P(resource, sizeof(resource) - 1);
-
-void netstat_html(WiFiClient wc) {
-    wc.setTimeout(10000);
-    int dlen = strlen(econfig.apssid) + strlen(econfig.ssid) - 4;
+    const char* json = R"=====({"ap": {"ssid": "%s", "password": "%s"}, "client": {"ssid": "%s", "password":""}, "status": {"available": [%s], "ip": "%s", "subnet": "%s", "gateway": "%s", "dns": "%s"}})=====";
 
     int n = WiFi.scanNetworks();
-    String wifi_option = "";
+        
+    String available = "";
     for (int i = 0; i < n; ++i) {
-        wifi_option += "<option value=\"" + WiFi.SSID(i) + "\">" +
-                       WiFi.SSID(i) + "</option>\r\n";
-    }
+      String ssid = WiFi.SSID(i);
+      ssid.replace('"','.');
 
-    dlen = wifi_option.length() - 2;
+        available += "\"" + ssid + "\"";
+        if (i < n-1)
+            available += ",";
+    }
+    dlen += available.length() - 2;
 
     String localip = WiFi.localIP().toString();
     dlen += localip.length() - 2;
@@ -194,16 +197,16 @@ void netstat_html(WiFiClient wc) {
     String dns = WiFi.dnsIP().toString();
     dlen += dns.length() - 2;
 
-    wc.printf(head_frm, 200, strlen_P(res_index_html) + dlen);
-    wc.printf_P(res_index_html, econfig.apssid, wifi_option.c_str(), econfig.ssid,
+    wc->printf(head_frm, 200, ctJson, strlen(json) + dlen);
+    wc->printf(json, econfig.apssid, econfig.appswd, econfig.ssid, available.c_str(),
                 localip.c_str(), subnet.c_str(), gateway.c_str(), dns.c_str());
 }
 
-void setssid(byte isAP, WiFiClient wc) {
+void setssid(byte isAP, WiFiClient* wc) {
     String line;
     int contentLen = 0;
     do {
-        line = wc.readStringUntil('\n');
+        line = wc->readStringUntil('\n');
         line.toLowerCase();
         if (line.indexOf("content-length") >= 0) {
             contentLen = line.substring(line.indexOf(':') + 1).toInt();
@@ -218,7 +221,7 @@ void setssid(byte isAP, WiFiClient wc) {
     memset(tssid, 0, sizeof(tssid));
     memset(tpswd, 0, sizeof(tpswd));
     while (contentLen) {
-        char c = wc.read();
+        char c = wc->read();
         contentLen--;
         if (c == '&' || contentLen == 0) {
             if (c != '&') key[pos++] = c;
@@ -242,9 +245,9 @@ void setssid(byte isAP, WiFiClient wc) {
             key[0] = '\0';
             value = NULL;
         } else if (c == '%') {
-            c = ctoh(wc.read());
+            c = ctoh(wc->read());
             c <<= 4;
-            c |= ctoh(wc.read()) & 0x0f;
+            c |= ctoh(wc->read()) & 0x0f;
             contentLen -= 2;
             key[pos++] = c;
         } else if (c == '=') {
@@ -256,7 +259,7 @@ void setssid(byte isAP, WiFiClient wc) {
         if (pos == sizeof(key)) break;
     }
 
-    fileResponse(wc, res_redir_html);
+    fileResponse((*wc), ctHtml, res_redir_html);
 
     save_eeprom();
     if (isAP) {
@@ -283,7 +286,7 @@ void setssid(byte isAP, WiFiClient wc) {
     MDNS.notifyAPChange();
     MDNS.update();
     save_eeprom();
-    while (wc.availableForWrite()) wc.flush();
+    while (wc->availableForWrite()) wc->flush();
     ESP.reset();
 }
 
@@ -395,6 +398,7 @@ void loop() {
             String s = avrOTA_client.readStringUntil('\n');
             s.toLowerCase();
 
+            // Control related
             int pos = s.lastIndexOf("baudrate=");
             if (pos > 0) {
                 while (s[pos++] != '=')
@@ -406,8 +410,8 @@ void loop() {
                     pos++;
                 }
                 if (trate > 0 && trate <= 2000000) {
-                    if (econfig.bardrate != trate) {
-                        econfig.bardrate = trate;
+                    if (econfig.baudrate != trate) {
+                        econfig.baudrate = trate;
                         save_eeprom();
                         Serial.begin(trate);
                     }
@@ -424,27 +428,27 @@ void loop() {
                     pos++;
                 }
                 if (trate > 0 && trate <= 2000000) {
-                    if (econfig.bardrate_isp != trate) {
-                        econfig.bardrate_isp = trate;
+                    if (econfig.baudrate_isp != trate) {
+                        econfig.baudrate_isp = trate;
                         save_eeprom();
                     }
                 }
             }
             if (s.indexOf("sync") > 0) {
-                String respone("OSEPP Esp8266 for UnoOTA, SYNC OK!");
+                String respone("Esp8266 for UnoOTA, SYNC OK!");
                 respone += millis();
                 if (s.indexOf("post") >= 0) {
-                    avrOTA_client.printf(head_frm, 204, respone.length());
+                    avrOTA_client.printf(head_frm, 204, ctPlain, respone.length());
                     avrOTA_client.print(respone);
                 } else {
-                    avrOTA_client.printf(head_frm, 200, respone.length());
+                    avrOTA_client.printf(head_frm, 200, ctPlain, respone.length());
                     avrOTA_client.print(respone);
                 }
             } else if (s.indexOf("reset") > 0) {
                 resetTarget();
                 String respone("Reset OK!");
                 respone += millis();
-                avrOTA_client.printf(head_frm, 200, respone.length());
+                avrOTA_client.printf(head_frm, 200, ctPlain, respone.length());
                 avrOTA_client.print(respone);
             } else if (s.indexOf("upload") > 0) {
                 String line;
@@ -459,7 +463,7 @@ void loop() {
                 } while (line != String("\r"));
                 extern int handleHex(WiFiClient client, int hexlen);
                 int handLen = handleHex(avrOTA_client, hexLen);
-                Serial.begin(econfig.bardrate);
+                Serial.begin(econfig.baudrate);
                 if (handLen != hexLen) {
                     String respone("Upload Error!");
                     if (handLen < 0) {
@@ -473,34 +477,58 @@ void loop() {
                         respone += total_write;
                         respone += " bytes have been written";
                     }
-                    avrOTA_client.printf(head_frm, 404, respone.length());
+                    avrOTA_client.printf(head_frm, 404, ctPlain, respone.length());
                     avrOTA_client.print(respone);
                 } else {
                     String respone("Upload done! Flash used:");
                     respone += total_write;
                     respone += " bytes";
-                    avrOTA_client.printf(head_frm, 200, respone.length());
+                    avrOTA_client.printf(head_frm, 200, ctPlain, respone.length());
                     avrOTA_client.print(respone);
                 }
-            } else if ((s.indexOf("setap") > 0) && (s.indexOf("post") >= 0)) {
-                setssid(1, avrOTA_client);
-            } else if ((s.indexOf("setwf") > 0) && (s.indexOf("post") >= 0)) {
-                setssid(0, avrOTA_client);
-            } else if (s.indexOf("netstat") > 0) {
-                netstat_html(avrOTA_client);
-            } else if (s.indexOf("getbaudrate") > 0) {
-                String respone(econfig.bardrate);
-                avrOTA_client.printf(head_frm, 200, respone.length());
-                avrOTA_client.print(respone);
-            } else if (s.indexOf("pendant") > 0) {
-                fileResponse(avrOTA_client, res_pendant_html);
+
+            // HTML content related
+
+            } else if (s.indexOf("favicon.ico") > 0) {
+                binFileResponse(avrOTA_client, ctIco, res_favicon_ico);
+
+            } else if (s.indexOf("common.js") > 0) {
+                fileResponse(avrOTA_client, ctJs, res_common_js);
+            } else if (s.indexOf("netstat.js") > 0) {
+                fileResponse(avrOTA_client, ctJs, res_netstat_js);
             } else if (s.indexOf("serial.js") > 0) {
-                fileResponse(avrOTA_client, res_serial_js);
+                fileResponse(avrOTA_client, ctJs, res_serial_js);
+            } else if (s.indexOf("ui.js") > 0) {
+                fileResponse(avrOTA_client, ctJs, res_ui_js);
+
+            } else if (s.indexOf("ui.css") > 0) {
+                fileResponse(avrOTA_client, ctCss, res_ui_css);
+
+            } else if (s.indexOf("netstat.html") > 0) {
+                fileResponse(avrOTA_client, ctHtml, res_netstat_html);
+            } else if (s.indexOf("pendant.html") > 0) {
+                fileResponse(avrOTA_client, ctHtml, res_pendant_html);
+            } else if (s.indexOf("redir.html") > 0) {
+                fileResponse(avrOTA_client, ctHtml, res_redir_html);
             } else if ((s.indexOf("index") > 0) || (s.indexOf(" / ") > 0) ||
-                       (s.indexOf("serial") > 0)) {
-                fileResponse(avrOTA_client, res_serial_html);
+                       (s.indexOf("serial.html") > 0)) {
+                fileResponse(avrOTA_client, ctHtml, res_serial_html);
+
+            // Actions
+            } else if ((s.indexOf("setap") > 0) && (s.indexOf("post") >= 0)) {
+                setssid(1, &avrOTA_client);
+            } else if ((s.indexOf("setwf") > 0) && (s.indexOf("post") >= 0)) {
+                setssid(0, &avrOTA_client);
+            } else if (s.indexOf("netstat") > 0) {
+                netstat_json(&avrOTA_client);
+            } else if (s.indexOf("getbaudrate") > 0) {
+                String respone(econfig.baudrate);
+                avrOTA_client.printf(head_frm, 200, ctJson, respone.length());
+                avrOTA_client.print(respone);
+
+            // 404
             } else {
-                avrOTA_client.printf(head_frm, 404, 0);
+                avrOTA_client.printf(head_frm, 404, ctPlain, 0);
             }
             avrOTA_client.flush();
             // avrOTA_client.stop();
@@ -757,7 +785,7 @@ int pageCheck(int curAddress) {
 }
 
 int entryBootloader() {
-    Serial.begin(econfig.bardrate_isp);
+    Serial.begin(econfig.baudrate_isp);
     resetTarget();
     delay(500);
     int i = 0;

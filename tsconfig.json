@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "target": "es2016",
+    "esModuleInterop": true,
+    "strict": false,
+    "skipLibCheck": true
+  },
+  
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
+}

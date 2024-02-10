@@ -6,8 +6,8 @@
     <meta http-equiv="cache-control" content="no-cache" />
     <meta http-equiv="expires" content="0" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serial Monitor</title>
-
+    <title>GRBL Serial Monitor</title>
+    <link rel="stylesheet" href="ui.css" />
     <style type="text/css">
         * {
             box-sizing: border-box;
@@ -53,26 +53,6 @@
             overflow: scroll;
         }
 
-        .ed-dd {
-            width: 120px;
-            height: 24px;
-            position: relative;
-        }
-
-        .ed-dd * {
-            position: absolute;
-            top: 0px;
-            left: 0px;
-        }
-
-        .ed-dd select {
-            width: 120px;
-        }
-
-        .ed-dd input {
-            width: 100px;
-        }
-
         .baud-label {
             font-size: 12pt;
             margin-right: -18px;
@@ -84,28 +64,11 @@
             border-radius: 4px;
         }
 
-        select, input {
-            font-size: 12pt;
-            white-space: pre;
-            border: none;
-            padding: 2px;
-            height: 24px;
-            border-radius: 4px;
-        }
-
-        select:focus,
-        input:focus {
-            outline: none;
-        }
-
         .svg_icon {
             cursor: pointer;
             width: 24px;
             height: 24px;
             transition: fill-opacity 0.5s;
-            -moz-transition: fill-opacity 0.5s; /* Firefox 4 */
-            -webkit-transition: fill-opacity 0.5s; /* Safari 和 Chrome */
-            -o-transition: fill-opacity 0.5s; /* Opera */
             vertical-align: middle;
             fill: #006461;
             fill-opacity: 0.7;
@@ -127,29 +90,7 @@
             display: inline-block;
         }
         
-        #ovrly {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            position: fixed;
-            width: 100svW;
-            height: 100svh;
-            background: rgba(0,0,0,0.5);
-            color:#FFF;
-            z-index: 100;
-        }
-
-        #ovrly a:link, #ovrly a:visited,
-        #ovrly a:active {
-            color: #FFF;
-            background-color: cadetblue;
-            text-decoration: none;
-            padding: 8px 24px;
-            font-size: 16pt;
-            border-radius: 20px;
-        }
+        
 
         @media( max-width: 700px) {
             #msgBar {
@@ -169,6 +110,10 @@
         }
 
     </style>
+    
+    <script src="common.js"></script>
+    <script src="serial.js"></script>
+    <script src="ui.js"></script>
 </head>
 <body>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display: none">
@@ -225,37 +170,68 @@
 
     <div id="msgDiv"></div>
     
-    <div id="ovrly"><p>Disconnected.</p><a href="#" onclick="ArduinoSerial.connect(); return false;">Reconnect?</a></div>
-    <script src="serial.js"></script>
+    <div id="oly"><p>Disconnected.</p><a href="#" onclick="ArduinoSerial.connect(); return false;">Reconnect?</a></div>
     <script>
-        window.onload = function(){
-            var _baudTxt = document.getElementById("baudtxt");
-            var _baudDd = document.getElementById("baud");
-            var _msg = document.getElementById("msg");
-            var _msgDiv = document.getElementById("msgDiv");
-            var _ovrly = document.getElementById("ovrly");
+        window.addEventListener('load', () => {
+            var _baudTxt = $.id("baudtxt");
+            var _msg = $.id("msg");
+            var _msgDiv = $.id("msgDiv");
+            var _ovrly = $.id("oly");
+
+            var history = [
+                    /* debug */
+                    "G1X0F10000",
+                    "G1X300",
+                    "G1Y351",
+                    "G1X0"
+                    /* end */
+            ];
+            var historyIdx = -1;
+            var historyTemp = "";
+
+            const ArduinoSerial = globalThis.ArduinoSerial;
 
             // BAUD editable dropdown
-
             _baudTxt.onchange = function () {
                 ArduinoSerial.setBaud(this.value);
             }
-
-            _baudDd.onchange = function () {
-                if (_baudTxt.value != this.value) {
-                    _baudTxt.value = this.value;
-                    _baudTxt.onchange();
-                }
-            };
-            _baudDd.onclick = function () {
-                _baudDd.selectedIndex = -1;
-            };
-
 
             // Messaging logic
             _msg.onkeyup = function (event) {
                 if (event.keyCode == 13) {
                     sendmsg();
+                }
+            };
+            _msg.onkeydown = function(event) {
+                if (event.key == 'ArrowUp'){
+                    if (historyIdx < 0) {
+                        historyIdx = history.length - 1;
+                        historyTemp = _msg.value;
+                    }
+                    else if(historyIdx > 0) {
+                        historyIdx--;
+                    }
+
+                    if (historyIdx >= 0 && historyIdx < history.length) {
+                        _msg.value = history[historyIdx];
+                    }
+                    /* debug */
+                    console.log(`history ${historyIdx}`);
+                    /* end */
+                }
+                if (event.key == 'ArrowDown'){
+                    if (historyIdx >= 0 && historyIdx < history.length)
+                        historyIdx++;
+                    if (historyIdx >= history.length) {
+                        _msg.value = historyTemp;
+                        historyIdx = -1;
+                    }
+                    else if (historyIdx > 0 && historyIdx < history.length) {
+                        _msg.value = history[historyIdx];
+                    }
+                    /* debug */
+                    console.log(`history ${historyIdx}`);
+                    /* end */
                 }
             };
             
@@ -276,6 +252,16 @@
                 ArduinoSerial.send(text);
                 _msg.focus();
                 _msg.select();
+
+                var last = history[history.length-1];
+                if (!last || last != text){
+                    history.push(text);
+                    if (history.length > 60) {
+                        history = history.slice(history.length - 50);
+                    }
+                }
+                historyIdx = history.length - 1;
+                historyTemp = "";
             };
 
             var socketClosed = function(){
@@ -328,10 +314,11 @@
 
             // Page setup
 
-            ArduinoSerial.getBaud(function(v){_baudTxt.value = v;});
+            ArduinoSerial.getBaud().then((v) => {_baudTxt.value = v;});
 
             ArduinoSerial.connect();
         }
+        )
     </script>
 </body>
 </html>

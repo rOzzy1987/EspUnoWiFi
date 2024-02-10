@@ -1,3 +1,6 @@
 node_modules
 temp
 package-lock.json
+EspUnoWifi/data/*.js
+EspUnoWifi/data/release.*
+

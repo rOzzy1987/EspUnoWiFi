@@ -1,0 +1,18 @@
+{
+    "rootdir": "./EspUnoWifi/",
+    "datadir": "data/",
+    "outputFile": "resources.h",
+    "files": [
+        "common.js",
+        "netstat.js",
+        "serial.js",
+        "ui.js",
+        
+        "ui.css",
+
+        "netstat.html",
+        "pendant.html",
+        "redir.html",
+        "serial.html"
+    ]
+}
