@@ -1,325 +1,366 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-    <meta charset="utf-8" />
-    <meta http-equiv="pragma" content="no-cache" />
-    <meta http-equiv="cache-control" content="no-cache" />
-    <meta http-equiv="expires" content="0" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GRBL Serial Monitor</title>
-    <link rel="stylesheet" href="ui.css" />
-    <style type="text/css">
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="pragma" content="no-cache" />
+        <meta http-equiv="cache-control" content="no-cache" />
+        <meta http-equiv="expires" content="0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>GRBL Serial Monitor</title>
+        <link rel="stylesheet" href="ui.css" />
+        <style type="text/css">
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
 
-        html {
-            height: 100svh;
-            overflow-y: scroll;
-        }
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 0;
-            height: 100svh;
-            font-family: sans-serif;
-        }
+            html {
+                height: 100svh;
+                overflow-y: scroll;
+            }
+            body {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                gap: 0;
+                height: 100svh;
+                font-family: sans-serif;
+            }
 
-        #msgBar {
-            display:flex;
-            flex-direction: row;
-            justify-content: space-between;
-            gap: 24px;
-            padding: 8px 24px;
-            width: 100%;
-            background-color: cadetblue;
-        }
-
-        #msgBar > div {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-        }
-
-        #msgDiv {
-            flex-grow: 1;
-            white-space: pre;
-            font-family: monospace;
-            padding: 2px 8px;
-            overflow: scroll;
-        }
-
-        .baud-label {
-            font-size: 12pt;
-            margin-right: -18px;
-            height: 24px;
-            background: #FFF;
-            color: gray;
-            padding: 2px;
-            padding-right: 10px;
-            border-radius: 4px;
-        }
-
-        .svg_icon {
-            cursor: pointer;
-            width: 24px;
-            height: 24px;
-            transition: fill-opacity 0.5s;
-            vertical-align: middle;
-            fill: #006461;
-            fill-opacity: 0.7;
-        }
-
-        .svg_icon:hover {
-            fill-opacity: 1;
-        }
-
-        #msg { width: 100%; }
-
-        .msgl { clear:both; }
-        .msgl .stamp {
-            opacity: .3;
-            padding-right: 8px;
-            float: left;
-        }
-        .msgl .msg {
-            display: inline-block;
-        }
-        
-        
-
-        @media( max-width: 700px) {
             #msgBar {
-                flex-direction: column-reverse;
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 24px;
+                padding: 8px 24px;
+                width: 100%;
+                background-color: cadetblue;
+            }
+
+            #msgBar > div {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
                 gap: 8px;
-                padding: 8px 12px;
             }
-            .baud-label {display: none;}
-            #msg { width: 100%; height: 36px; font-size: 16pt; }
-        }
 
-        @media (max-width: 400px){
+            #msgDiv {
+                flex-grow: 1;
+                white-space: pre;
+                font-family: monospace;
+                padding: 2px 8px;
+                overflow: scroll;
+            }
+
+            .baud-label {
+                font-size: 12pt;
+                margin-right: -18px;
+                height: 24px;
+                background: #fff;
+                color: gray;
+                padding: 2px;
+                padding-right: 10px;
+                border-radius: 4px;
+            }
+
+            .svg_icon {
+                cursor: pointer;
+                width: 24px;
+                height: 24px;
+                transition: fill-opacity 0.5s;
+                vertical-align: middle;
+                fill: #006461;
+                fill-opacity: 0.7;
+            }
+
+            .svg_icon:hover {
+                fill-opacity: 1;
+            }
+
+            #msg {
+                width: 100%;
+            }
+
+            .msgl {
+                clear: both;
+            }
             .msgl .stamp {
-                display: none;
+                opacity: 0.3;
+                padding-right: 8px;
+                float: left;
+            }
+            .msgl .msg {
+                display: inline-block;
             }
 
-        }
+            @media (max-width: 700px) {
+                #msgBar {
+                    flex-direction: column-reverse;
+                    gap: 8px;
+                    padding: 8px 12px;
+                }
+                .baud-label {
+                    display: none;
+                }
+                #msg {
+                    width: 100%;
+                    height: 36px;
+                    font-size: 16pt;
+                }
+            }
 
-    </style>
-    
-    <script src="common.js"></script>
-    <script src="serial.js"></script>
-    <script src="ui.js"></script>
-</head>
-<body>
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="display: none">
-        <symbol id="svg_sendtext" viewBox="0 0 512 512">
-            <path d="M224 387.814v124.186l-192-192 192-192v126.912c223.375 5.24 213.794-151.896 156.931-254.912 140.355 151.707 110.55 394.785-156.931 387.814z"></path>
-        </symbol>
-        <symbol id="svg_resetuno" viewBox="0 0 512 512">
-            <path d="M444.84 83.16c-46.804-51.108-114.077-83.16-188.84-83.16-141.385 0-256 114.615-256 256h48c0-114.875 93.125-208 208-208 61.51 0 116.771 26.709 154.848 69.153l-74.848 74.847h176v-176l-67.16 67.16z"></path>
-            <path d="M464 256c0 114.875-93.125 208-208 208-61.51 0-116.771-26.709-154.847-69.153l74.847-74.847h-176v176l67.16-67.16c46.804 51.108 114.077 83.16 188.84 83.16 141.385 0 256-114.615 256-256h-48z"></path>
-        </symbol>
-    </svg>
-    <div id="msgBar">
-        <div style="flex-grow: 1;">
-            <input id="msg" type="text" placeholder="Send message" />
-        </div>
-        <div>
-            <span class="baud-label">Baud rate:</span>
-            <span class="ed-dd">
-                <select id="baud">
-                    <option>300</option>
-                    <option>1200</option>
-                    <option>2400</option>
-                    <option>4800</option>
-                    <option>9600</option>
-                    <option>14400</option>
-                    <option>19200</option>
-                    <option>28800</option>
-                    <option>38400</option>
-                    <option>57600</option>
-                    <option>74880</option>
-                    <option selected="selected">115200</option>
-                    <option>128000</option>
-                    <option>230400</option>
-                    <option>250000</option>
-                    <option>1000000</option>
-                    <option>2000000</option>
+            @media (max-width: 400px) {
+                .msgl .stamp {
+                    display: none;
+                }
+            }
+        </style>
+
+        <script src="common.js"></script>
+        <script src="serial.js"></script>
+        <script src="ui.js"></script>
+    </head>
+    <body>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            version="1.1"
+            style="display: none"
+        >
+            <symbol id="svg_sendtext" viewBox="0 0 512 512">
+                <path
+                    d="M224 387.814v124.186l-192-192 192-192v126.912c223.375 5.24 213.794-151.896 156.931-254.912 140.355 151.707 110.55 394.785-156.931 387.814z"
+                ></path>
+            </symbol>
+            <symbol id="svg_resetuno" viewBox="0 0 512 512">
+                <path
+                    d="M444.84 83.16c-46.804-51.108-114.077-83.16-188.84-83.16-141.385 0-256 114.615-256 256h48c0-114.875 93.125-208 208-208 61.51 0 116.771 26.709 154.848 69.153l-74.848 74.847h176v-176l-67.16 67.16z"
+                ></path>
+                <path
+                    d="M464 256c0 114.875-93.125 208-208 208-61.51 0-116.771-26.709-154.847-69.153l74.847-74.847h-176v176l67.16-67.16c46.804 51.108 114.077 83.16 188.84 83.16 141.385 0 256-114.615 256-256h-48z"
+                ></path>
+            </symbol>
+        </svg>
+        <div id="msgBar">
+            <div style="flex-grow: 1">
+                <input id="msg" type="text" placeholder="Send message" />
+            </div>
+            <div>
+                <span class="baud-label">Baud rate:</span>
+                <span class="ed-dd">
+                    <select id="baud">
+                        <option>300</option>
+                        <option>1200</option>
+                        <option>2400</option>
+                        <option>4800</option>
+                        <option>9600</option>
+                        <option>14400</option>
+                        <option>19200</option>
+                        <option>28800</option>
+                        <option>38400</option>
+                        <option>57600</option>
+                        <option>74880</option>
+                        <option selected="selected">115200</option>
+                        <option>128000</option>
+                        <option>230400</option>
+                        <option>250000</option>
+                        <option>1000000</option>
+                        <option>2000000</option>
+                    </select>
+                    <input id="baudtxt" type="text" />
+                </span>
+                <select id="lef">
+                    <option value="-">No line ending</option>
+                    <option value="n" selected="selected">Newline</option>
+                    <option value="r">Carriage return</option>
+                    <option value="rn">Both NL&CR</option>
                 </select>
-                <input id="baudtxt" type="text" />
-            </span>
-            <select id="lef">
-                <option value="-">No line ending</option>
-                <option value="n" selected="selected">Newline</option>
-                <option value="r">Carriage return</option>
-                <option value="rn">Both NL&CR</option>
-            </select>
-            <svg id="send" class="svg_icon" onclick="sendmsg()">
-                <use xlink:href="#svg_sendtext" width="24px" height="24px"></use>
-            </svg>
-            <svg id="reset" class="svg_icon" onclick="ArduinoSerial.reset()">
-                <use xlink:href="#svg_resetuno" width="24px" height="24px"></use>
-            </svg>
+                <svg id="send" class="svg_icon" onclick="sendmsg()">
+                    <use
+                        xlink:href="#svg_sendtext"
+                        width="24px"
+                        height="24px"
+                    ></use>
+                </svg>
+                <svg
+                    id="reset"
+                    class="svg_icon"
+                    onclick="ArduinoSerial.reset()"
+                >
+                    <use
+                        xlink:href="#svg_resetuno"
+                        width="24px"
+                        height="24px"
+                    ></use>
+                </svg>
+            </div>
         </div>
-    </div>
 
-    <div id="msgDiv"></div>
-    
-    <div id="oly"><p>Disconnected.</p><a href="#" onclick="ArduinoSerial.connect(); return false;">Reconnect?</a></div>
-    <script>
-        window.addEventListener('load', () => {
-            var _baudTxt = $.id("baudtxt");
-            var _msg = $.id("msg");
-            var _msgDiv = $.id("msgDiv");
-            var _ovrly = $.id("oly");
+        <div id="msgDiv"></div>
 
-            var history = [
+        <div id="oly">
+            <p>Disconnected.</p>
+            <a href="#" onclick="ArduinoSerial.connect(); return false;"
+                >Reconnect?</a
+            >
+        </div>
+        <script>
+            window.addEventListener('load', () => {
+                var _baudTxt = $.id('baudtxt');
+                var _msg = $.id('msg');
+                var _msgDiv = $.id('msgDiv');
+                var _ovrly = $.id('oly');
+
+                var history = [
                     /* debug */
-                    "G1X0F10000",
-                    "G1X300",
-                    "G1Y351",
-                    "G1X0"
+                    'G1X0F10000',
+                    'G1X300',
+                    'G1Y351',
+                    'G1X0',
                     /* end */
-            ];
-            var historyIdx = -1;
-            var historyTemp = "";
+                ];
+                var historyIdx = -1;
+                var historyTemp = '';
 
-            const ArduinoSerial = globalThis.ArduinoSerial;
+                const ArduinoSerial = globalThis.ArduinoSerial;
 
-            // BAUD editable dropdown
-            _baudTxt.onchange = function () {
-                ArduinoSerial.setBaud(this.value);
-            }
-
-            // Messaging logic
-            _msg.onkeyup = function (event) {
-                if (event.keyCode == 13) {
-                    sendmsg();
-                }
-            };
-            _msg.onkeydown = function(event) {
-                if (event.key == 'ArrowUp'){
-                    if (historyIdx < 0) {
-                        historyIdx = history.length - 1;
-                        historyTemp = _msg.value;
-                    }
-                    else if(historyIdx > 0) {
-                        historyIdx--;
-                    }
-
-                    if (historyIdx >= 0 && historyIdx < history.length) {
-                        _msg.value = history[historyIdx];
-                    }
-                    /* debug */
-                    console.log(`history ${historyIdx}`);
-                    /* end */
-                }
-                if (event.key == 'ArrowDown'){
-                    if (historyIdx >= 0 && historyIdx < history.length)
-                        historyIdx++;
-                    if (historyIdx >= history.length) {
-                        _msg.value = historyTemp;
-                        historyIdx = -1;
-                    }
-                    else if (historyIdx > 0 && historyIdx < history.length) {
-                        _msg.value = history[historyIdx];
-                    }
-                    /* debug */
-                    console.log(`history ${historyIdx}`);
-                    /* end */
-                }
-            };
-            
-            var sendmsg = function () {
-                var text = _msg.value;
-                var line_ending = document.getElementById("lef").value;
-                if (!text) return;
-                switch (line_ending) {
-                    case "n":
-                        text += "\n";
-                        break;
-                    case "r":
-                        text += "\r";
-                        break;
-                    case "rn":
-                        text += "\n\r";
-                }
-                ArduinoSerial.send(text);
-                _msg.focus();
-                _msg.select();
-
-                var last = history[history.length-1];
-                if (!last || last != text){
-                    history.push(text);
-                    if (history.length > 60) {
-                        history = history.slice(history.length - 50);
-                    }
-                }
-                historyIdx = history.length - 1;
-                historyTemp = "";
-            };
-
-            var socketClosed = function(){
-                document.title = "Serial Monitor Disconnected";
-                _ovrly.style.cssText = "";
-            };
-
-            var displayMessage = function(msg){
-                var el = _msgDiv;
-                var scroll = el.scrollHeight - el.clientHeight - el.scrollTop;
-
-                var date = new Date();
-
-                var stampEl = document.createElement("span");
-                stampEl.classList.add("stamp");
-                stampEl.innerHTML = date.getHours().toFixed().padStart(2,"0")
-                    +":"+date.getMinutes().toFixed().padStart(2, "0")
-                    +":"+date.getSeconds().toFixed().padStart(2, "0");
-
-                var msgEl = document.createElement("span");
-                msgEl.classList.add("msg");
-                msgEl.innerText = msg;
-
-                var lineEl = document.createElement("div");
-                lineEl.classList.add("msgl");
-                lineEl.appendChild(stampEl);
-                lineEl.appendChild(msgEl);
-
-                el.appendChild(lineEl);
-
-                if (scroll < lineEl.offsetHeight * 1.5) {
-                    if (el.childNodes.length > 300) {
-                        while (el.childNodes.length > 200) el.removeChild(el.childNodes[0]);
-                    }
-                    el.scrollTop = el.scrollHeight;
+                // BAUD editable dropdown
+                _baudTxt.onchange = function () {
+                    ArduinoSerial.setBaud(this.value);
                 };
-            }
 
-            // Serial setup
+                // Messaging logic
+                _msg.onkeyup = function (event) {
+                    if (event.keyCode == 13) {
+                        sendmsg();
+                    }
+                };
+                _msg.onkeydown = function (event) {
+                    if (event.key == 'ArrowUp') {
+                        if (historyIdx < 0) {
+                            historyIdx = history.length - 1;
+                            historyTemp = _msg.value;
+                        } else if (historyIdx > 0) {
+                            historyIdx--;
+                        }
 
-            ArduinoSerial.onError = socketClosed;
-            ArduinoSerial.onClose = socketClosed;
-            ArduinoSerial.onOpen = function (event) {
-                var host = document.location.hostname;
-                displayMessage(`----------- Connected to ${host} -----------`);
-                document.title = `Serial Monitor at ${host}`;
-                _ovrly.style.display = "none";
-            };
-            ArduinoSerial.onMessage = displayMessage;
+                        if (historyIdx >= 0 && historyIdx < history.length) {
+                            _msg.value = history[historyIdx];
+                        }
+                        /* debug */
+                        console.log(`history ${historyIdx}`);
+                        /* end */
+                    }
+                    if (event.key == 'ArrowDown') {
+                        if (historyIdx >= 0 && historyIdx < history.length)
+                            historyIdx++;
+                        if (historyIdx >= history.length) {
+                            _msg.value = historyTemp;
+                            historyIdx = -1;
+                        } else if (
+                            historyIdx > 0 &&
+                            historyIdx < history.length
+                        ) {
+                            _msg.value = history[historyIdx];
+                        }
+                        /* debug */
+                        console.log(`history ${historyIdx}`);
+                        /* end */
+                    }
+                };
 
-            // Page setup
+                var sendmsg = function () {
+                    var text = _msg.value;
+                    var line_ending = document.getElementById('lef').value;
+                    if (!text) return;
+                    switch (line_ending) {
+                        case 'n':
+                            text += '\n';
+                            break;
+                        case 'r':
+                            text += '\r';
+                            break;
+                        case 'rn':
+                            text += '\n\r';
+                    }
+                    ArduinoSerial.send(text);
+                    _msg.focus();
+                    _msg.select();
 
-            ArduinoSerial.getBaud().then((v) => {_baudTxt.value = v;});
+                    var last = history[history.length - 1];
+                    if (!last || last != text) {
+                        history.push(text);
+                        if (history.length > 60) {
+                            history = history.slice(history.length - 50);
+                        }
+                    }
+                    historyIdx = history.length - 1;
+                    historyTemp = '';
+                };
 
-            ArduinoSerial.connect();
-        }
-        )
-    </script>
-</body>
+                var socketClosed = function () {
+                    document.title = 'Serial Monitor Disconnected';
+                    _ovrly.style.cssText = '';
+                };
+
+                var displayMessage = function (msg) {
+                    var el = _msgDiv;
+                    var scroll =
+                        el.scrollHeight - el.clientHeight - el.scrollTop;
+
+                    var date = new Date();
+
+                    var stampEl = document.createElement('span');
+                    stampEl.classList.add('stamp');
+                    stampEl.innerHTML =
+                        date.getHours().toFixed().padStart(2, '0') +
+                        ':' +
+                        date.getMinutes().toFixed().padStart(2, '0') +
+                        ':' +
+                        date.getSeconds().toFixed().padStart(2, '0');
+
+                    var msgEl = document.createElement('span');
+                    msgEl.classList.add('msg');
+                    msgEl.innerText = msg;
+
+                    var lineEl = document.createElement('div');
+                    lineEl.classList.add('msgl');
+                    lineEl.appendChild(stampEl);
+                    lineEl.appendChild(msgEl);
+
+                    el.appendChild(lineEl);
+
+                    if (scroll < lineEl.offsetHeight * 1.5) {
+                        if (el.childNodes.length > 300) {
+                            while (el.childNodes.length > 200)
+                                el.removeChild(el.childNodes[0]);
+                        }
+                        el.scrollTop = el.scrollHeight;
+                    }
+                };
+
+                // Serial setup
+
+                ArduinoSerial.onError = socketClosed;
+                ArduinoSerial.onClose = socketClosed;
+                ArduinoSerial.onOpen = function (event) {
+                    var host = document.location.hostname;
+                    displayMessage(
+                        `----------- Connected to ${host} -----------`
+                    );
+                    document.title = `Serial Monitor at ${host}`;
+                    _ovrly.style.display = 'none';
+                };
+                ArduinoSerial.onMessage = displayMessage;
+
+                // Page setup
+
+                ArduinoSerial.getBaud().then((v) => {
+                    _baudTxt.value = v;
+                });
+
+                ArduinoSerial.connect();
+            });
+        </script>
+    </body>
 </html>
-

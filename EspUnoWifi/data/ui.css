@@ -1,7 +1,7 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;   
+    box-sizing: border-box;
 }
 
 body {
@@ -29,7 +29,8 @@ body {
     width: 100px;
 }
 
-select, input {
+select,
+input {
     font-size: 12pt;
     white-space: pre;
     border: none;
@@ -51,16 +52,17 @@ input:focus {
     justify-content: center;
     gap: 16px;
     position: fixed;
-    width: 100svW;
+    width: 100svw;
     height: 100svh;
-    background: rgba(0,0,0,0.5);
-    color:#FFF;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
     z-index: 100;
 }
 
-#oly a:link, #oly a:visited,
+#oly a:link,
+#oly a:visited,
 #oly a:active {
-    color: #FFF;
+    color: #fff;
     background-color: cadetblue;
     text-decoration: none;
     padding: 8px 24px;
