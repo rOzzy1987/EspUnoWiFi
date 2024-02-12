@@ -26,7 +26,7 @@ window.addEventListener('load', async () => {
             status: {
                 available: ['FulesKancso', 'WifiCola'],
                 ip: '192.168.0.169',
-                subnet: '255.255.255.0'
+                subnet: '255.255.255.0',
             },
         };
         return data;
