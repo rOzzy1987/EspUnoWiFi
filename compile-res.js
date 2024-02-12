@@ -10,38 +10,42 @@ const config = require('./resources.json');
 const outputFile = config.rootdir + config.outputFile;
 const files = config.files;
 const datadir = config.rootdir + config.datadir;
-
-const DBG = !process.argv.every(a => a != '-debug');
-if (DBG) {
-    console.log("--- DEBUG ---");
-}
+const tempdir = config.rootdir + config.tempdir;
+const outdir = config.rootdir + config.outdir;
 
 
-async function removeDebug(file) {
-    console.log(` - Removing debug stuff from ${file}`); 
-    var content = await fsAsync.readFile(datadir+file, {encoding: 'utf-8'});
-    pattern = /\/\* debug \*\/((?:.|\n)*?)(?:\/\* else \*\/((?:.|\n)*?))?\/\* end \*\//gm;
+async function preprocess(file, args) {
+    console.log(` - Preprocessing ${file}`); 
+    var content = await fsAsync.readFile(datadir + file, {encoding: 'utf-8'});
 
-    if (pattern.test(content)){
-        
-        content = content.replace(pattern, DBG ? "$1" : "$2");
-        
-        const path = datadir+'release.'+file;
+    const pattern = /\/\* if ([a-z]+) \*\/((?:.|\n)*?)(?:\/\* else \*\/((?:.|\n)*?))?\/\* end \*\//gm;
+    var match;
+    var changed = false;
+    
+    while(match = pattern.exec(content))
+    {
+        content = content.replace(pattern, args.indexOf(match[1]) ? "$1" : "$2");
+        changed = true;
+    }
+    if(changed) {
+        const path = tempdir + file;
         await fsAsync.writeFile(path, content);
         return path;
     }
     return datadir + file;
 }
 
-async function main() {
+async function main(args) {
     console.log(`Compiling ${config.files.length} files...\n`);
+    args = args.slice(2);
+    console.log(`Flags used:\n   ${args.join('\n   ')}\n\n`);
 
     const minify = (await mfy).minify;
 
-    if(fs.existsSync(outputFile)){
-        await fsAsync.truncate(outputFile);
-    }
-    var ws = fs.createWriteStream(outputFile, {});
+    // if(fs.existsSync(outputFile)){
+    //     await fsAsync.truncate(outputFile);
+    // }
+    var ws = fs.createWriteStream(outputFile);
 
     ws.write(`
 /////////////////////////////////////////////////////
@@ -57,8 +61,7 @@ async function main() {
     for(var file of files){
         
         console.info(`Minifying ${file}`)
-        var path = datadir+file;
-            path = await removeDebug(file);
+        var path = await preprocess(file, args);
         const hndl = await fsAsync.stat(path);
         const mini = await minify(path, {js:{compress: {drop_console: true}}});
 
@@ -68,6 +71,9 @@ async function main() {
         console.info(` - Done (${so} -> ${sm}) bytes`)
         origSize += so;
         minifiedSize += sm;
+
+        
+        await fsAsync.writeFile(outdir+file, mini);
 
         ws.write(`
 // file:${file.padStart(24, ' ')}
@@ -93,4 +99,4 @@ const char res_${file.replace('.', '_')}[] PROGMEM = R"=====(
     console.log(`\n${files.length} files compiled into ${outputFile}\nTotal: ${origSize} -> ${minifiedSize} bytes\n`)
 };
 
-main();
+main(process.argv);

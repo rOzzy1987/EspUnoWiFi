@@ -1,6 +1,6 @@
 node_modules
 temp
+.pio
+.vscode
 package-lock.json
-EspUnoWifi/data/*.js
-EspUnoWifi/data/release.*
 

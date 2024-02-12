@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang=en xmlns=http://www.w3.org/1999/xhtml>
+<head>
+    <meta charset=utf-8>
+    <meta http-equiv=pragma content=no-cache>
+    <meta http-equiv=cache-control content=no-cache>
+    <meta http-equiv=expires content=0>
+    <meta name=viewport content="width=device-width,initial-scale=1">
+    <title>GRBL Pendant</title>
+    <link rel=preconnect href=https://fonts.googleapis.com>
+    <link rel=preconnect href=https://fonts.gstatic.com crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Workbench&display=swap" rel=stylesheet>
+    <link href=ui.css rel=stylesheet>
+    <script src=common.js></script>
+    <script src=serial.js></script>
+    <script src=pendant.js></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            transition: all ease-in-out .2s
+        }
+
+        body {
+            padding: 24px;
+            font-family: sans-serif;
+            font-size: 18px;
+            display: flex;
+            justify-content: start;
+            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 24px;
+            background: #ccd;
+            width: 100svw;
+            min-height: 100svh
+        }
+
+        .led {
+            font-size: 14px;
+            line-height: 14px;
+            text-transform: uppercase
+        }
+
+        .led:before {
+            content: '\2B24';
+            color: #300;
+            margin-right: 5px
+        }
+
+        .led.active:before {
+            color: red
+        }
+
+        .group,.vgroup {
+            display: flex;
+            gap: 16px
+        }
+
+        .vgroup {
+            flex-direction: column
+        }
+
+        .dro {
+            display: flex;
+            flex-wrap: wrap;
+            flex-grow: 0;
+            gap: 48px;
+            width: 100%
+        }
+
+        .cat {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 280px;
+            background-color: #313;
+            border: 3px solid #000;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: inset 3px 3px #fff;
+            width: 440px
+        }
+
+        .dsp {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 24px
+        }
+
+        .name,.title,.unit {
+            color: #bcd;
+            font-weight: 700;
+            width: 75px
+        }
+
+        .unit {
+            width: 30px
+        }
+
+        .title {
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-bottom: -24px
+        }
+
+        .val {
+            flex-grow: 1;
+            font-family: Workbench,monospace;
+            font-size: 48px;
+            text-align: right;
+            color: #0a0;
+            background: #313;
+            border: none;
+            height: 48px;
+            padding: 0
+        }
+
+        input.val {
+            border: 1px solid #424;
+            border-radius: 4px;
+            width: 200px
+        }
+
+        .ji,.kb {
+            flex-wrap: wrap
+        }
+
+        .empty,.key {
+            height: 60px;
+            width: 60px;
+            font-size: 24px;
+            line-height: 24px
+        }
+
+        .key {
+            padding: 18px 0;
+            text-align: center;
+            position: relative;
+            border: 1px solid #000;
+            border-radius: 4px;
+            background: #dcb;
+            text-transform: uppercase;
+            cursor: pointer
+        }
+
+        .key svg {
+            width: 24px;
+            height: 24px;
+            vertical-align: bottom
+        }
+
+        .key:hover {
+            box-shadow: 8px 8px 8px rgba(0,0,0,.4)
+        }
+
+        .key:active {
+            top: 4px;
+            left: 4px;
+            box-shadow: 0 0 8px rgba(0,0,0,.4)
+        }
+
+        .key.lg {
+            width: 136px
+        }
+
+        .key.hg {
+            height: 136px;
+            padding: 53px 0;
+            margin-bottom: -76px
+        }
+
+        .key sub {
+            font-size: 12px
+        }
+
+        .key.lgt {
+            background: #fed
+        }
+
+        .key.red {
+            background: #a00
+        }
+
+        .key.ylw {
+            background: #dd3
+        }
+
+        .key.lbl {
+            background: #8af
+        }
+
+        .key.dbl {
+            background: #259
+        }
+
+        .key.grn {
+            background: #060
+        }
+
+        .key.dbl,.key.grn,.key.red {
+            color: #fff
+        }
+
+        .key.dbl svg,.key.grn svg,.key.red svg {
+            fill: #fff
+        }
+
+        .key.onoff:before {
+            content: '\2B24';
+            color: #300;
+            position: absolute;
+            top: -3px;
+            left: 3px;
+            font-size: 12px
+        }
+
+        .key.onoff.active:before {
+            color: red
+        }
+
+        @media (max-width: 720px) {
+            #dro {
+                gap:12px
+            }
+
+            .title {
+                display: none;
+                text-transform: uppercase;
+                font-size: 12px;
+                margin-bottom: 0
+            }
+
+            .cat {
+                flex-direction: row;
+                flex-wrap: wrap;
+                flex-grow: 1;
+                width: 338px
+            }
+
+            .cat.mchn {
+                display: none
+            }
+
+            .val {
+                font-size: 24px;
+                flex-grow: 0
+            }
+
+            .unit {
+                display: none
+            }
+
+            .group,.vgroup {
+                gap: 10px
+            }
+
+            .empty,.key {
+                width: 48px;
+                height: 48px;
+                font-size: 19px;
+                line-height: 19px
+            }
+
+            .key {
+                padding: 14px 0
+            }
+
+            .key svg {
+                width: 19px;
+                height: 19px
+            }
+
+            .key.lg {
+                width: 106px
+            }
+
+            .key.hg {
+                height: 106px;
+                margin-bottom: -58px;
+                padding: 43px 0
+            }
+
+            .key sub {
+                font-size: 10px
+            }
+
+            .key.onoff:before {
+                top: -2px
+            }
+        }
+    </style></head>
+    <body>
+        <svg xmlns=http://www.w3.org/2000/svg version=1.1 style=display:none>
+            <symbol id=svg_sendtext viewBox="0 0 512 512">
+                <path d="M224 387.814v124.186l-192-192 192-192v126.912c223.375 5.24 213.794-151.896 156.931-254.912 140.355 151.707 110.55 394.785-156.931 387.814z"/>
+            </symbol>
+            <symbol id=svg_resetuno viewBox="0 0 512 512">
+                <path d="M444.84 83.16c-46.804-51.108-114.077-83.16-188.84-83.16-141.385 0-256 114.615-256 256h48c0-114.875 93.125-208 208-208 61.51 0 116.771 26.709 154.848 69.153l-74.848 74.847h176v-176l-67.16 67.16z M464 256c0 114.875-93.125 208-208 208-61.51 0-116.771-26.709-154.847-69.153l74.847-74.847h-176v176l67.16-67.16c46.804 51.108 114.077 83.16 188.84 83.16 141.385 0 256-114.615 256-256h-48z"/>
+            </symbol>
+            <symbol id=svg_clear viewBox="0 0 512 512">
+                <path d="M60 0 l-60 60 l196 196 l-196 196 l60 60 l196 -196 l 196 196 l60 -60 l-196 -196 l196 -196 l-60 -60 l-196 196z"/>
+            </symbol>
+            <symbol id=svg_alarm viewBox="0 0 512 512">
+                <path d="M64 352 l0 -32 a 32 32 0 0 0 32 -32 a 161 240 0 1 1 320 0 a 32 32 0 0 0 32 32 l0 32z M64 416 l0 -48 l384 0 l0 48z M192 432 a 64 64 0 0 0 128 0z"/>
+            </symbol>
+            <symbol id=svg_arrow viewBox="0 0 512 512">
+                <path d="M256 64 l192 384 l-192 -64 l-192 64z"></path>
+            </symbol>
+            <symbol id=svg_stop viewBox="0 0 512 512">
+                <path d="M150 0 l212 0 l 150 150 l 0 212 l -150 150 l-212 0 l -150 -150 l0 -212"/>
+            </symbol>
+            <symbol id=svg_home viewBox="0 0 512 512">
+                <path d="M64 480 l384 0 l0 -256 l-192 -90 l -192 90z m-60 -280 l 256 -120 l 256 120 l0 -64 l -256 -120 l -256 120z"/>
+            </symbol>
+        </svg>
+        <div class="group dro">
+            <div class="cat mchn">
+                <div class=title>Machine</div>
+                <div class=dsp>
+                    <div class=name>X:</div>
+                    <div class="val st mx"></div>
+                    <div class="unit l">mm</div>
+                </div>
+                <div class=dsp>
+                    <div class=name>Y:</div>
+                    <div class="val st my"></div>
+                    <div class="unit l">mm</div>
+                </div>
+                <div class=dsp>
+                    <div class=name>Z:</div>
+                    <div class="val st mz"></div>
+                    <div class="unit l">mm</div>
+                </div>
+            </div>
+            <div class=cat>
+                <div class=title>Work</div>
+                <div class=dsp>
+                    <div class=name>X:</div>
+                    <div class="val st wx"></div>
+                    <div class="unit l">mm</div>
+                </div>
+                <div class=dsp>
+                    <div class=name>Y:</div>
+                    <div class="val st wy"></div>
+                    <div class="unit l">mm</div>
+                </div>
+                <div class=dsp>
+                    <div class=name>Z:</div>
+                    <div class="val st wz"></div>
+                    <div class="unit l">mm</div>
+                </div>
+            </div>
+            <div class=cat>
+                <div class=title>Status</div>
+                <div class=dsp>
+                    <div class=name>Feed:</div>
+                    <div class="val st feed"></div>
+                    <div class="unit v">
+                        <u>mm</u>
+                        <br>min
+                    </div>
+                </div>
+                <div class=dsp>
+                    <div class=name>Spindle:</div>
+                    <div class="val st sspd"></div>
+                    <div class="unit sspd">%</div>
+                </div>
+                <div class=dsp>
+                    <div class=name>State:</div>
+                    <div class="val st sttxt"></div>
+                    <div class=unit></div>
+                </div>
+            </div>
+        </div>
+        <div class="group kb">
+            <div class=vgroup>
+                <div class=group>
+                    <div class="key lg red" data-gcode=&#x18;>
+                        <svg>
+                            <use xlink:href=#svg_stop/>
+                        </svg>
+                        Stop
+                    </div>
+                    <div class="key ylw" data-gcode=!>&#x2595;&#x258F;</div>
+                    <div class="key ylw" data-gcode=~>&#x25B7;</div>
+                    <div class="key grn onoff arm" data-gcode=$X title="Clear alarm">
+                        <svg>
+                            <use xlink:href=#svg_alarm/>
+                        </svg>
+                    </div>
+                </div>
+                <div class=group>
+                    <div class=vgroup>
+                        <div class=key data-gcode=G92X0>
+                            X<sub>0</sub>
+                        </div>
+                        <div class=key data-cmd=wo data-arg=xh>
+                            X<sub>1/2</sub>
+                        </div>
+                    </div>
+                    <div class=vgroup>
+                        <div class=key data-gcode=G92Y0>
+                            Y<sub>0</sub>
+                        </div>
+                        <div class=key data-cmd=wo data-arg=yh>
+                            Y<sub>1/2</sub>
+                        </div>
+                    </div>
+                    <div class=vgroup>
+                        <div class=key data-gcode=G92Z0>
+                            Z<sub>0</sub>
+                        </div>
+                        <div class=key data-cmd=wo data-arg=zh>
+                            Z<sub>1/2</sub>
+                        </div>
+                    </div>
+                    <div class=vgroup>
+                        <div class="key lbl" data-cmd=fd data-arg=+>F +</div>
+                        <div class="key lbl" data-cmd=fd data-arg=->F -</div>
+                    </div>
+                    <div class=vgroup>
+                        <div class="key grn" data-gcode=M5S0>
+                            S<sub>0</sub>
+                        </div>
+                        <div class="key red" data-cmd=spn data-arg=100>
+                            S<sub>100</sub>
+                        </div>
+                    </div>
+                    <div class=vgroup>
+                        <div class="key ylw" data-cmd=spn data-arg=5>
+                            S<sub>5</sub>
+                        </div>
+                        <div class="key red" data-cmd=spn data-arg=50>
+                            S<sub>50</sub>
+                        </div>
+                    </div>
+                </div>
+                <div class=group>
+                    <div class="key lbl" title=Reconnect data-cmd=conn>&#x27f3;</div>
+                    <div class="key ylw" title=Reset data-cmd=rst>&#x2A3B;</div>
+                </div>
+            </div>
+            <div class=group>
+                <div class=vgroup>
+                    <div class=empty>
+                        <div class="led st abs">Abs</div>
+                        <div class="led st spn">Spn</div>
+                        <div class="led st cln">Cln</div>
+                    </div>
+                    <div class="key lgt" data-cmd=jg data-arg=X->
+                        <svg style=transform:rotate(-90deg)>
+                            <use xlink:href=#svg_arrow/>
+                        </svg>
+                    </div>
+                    <div class="key lgt" data-cmd=jg data-arg=Z->Z-</div>
+                    <div class=key data-cmd=jh data-arg=X>
+                        X<sub>&#x21D2;0</sub>
+                    </div>
+                </div>
+                <div class=vgroup>
+                    <div class="key lgt" data-cmd=jg data-arg=Y>
+                        <svg>
+                            <use xlink:href=#svg_arrow/>
+                        </svg>
+                    </div>
+                    <div class=key data-gcode=$H>
+                        <svg>
+                            <use xlink:href=#svg_home/>
+                        </svg>
+                    </div>
+                    <div class="key lgt" data-cmd=jg data-arg=Y->
+                        <svg style=transform:rotate(180deg)>
+                            <use xlink:href=#svg_arrow/>
+                        </svg>
+                    </div>
+                    <div class=key data-cmd=jh data-arg=Y>
+                        Y<sub>&#x21D2;0</sub>
+                    </div>
+                </div>
+                <div class=vgroup>
+                    <div class=empty></div>
+                    <div class="key lgt" data-cmd=jg data-arg=X>
+                        <svg style=transform:rotate(90deg)>
+                            <use xlink:href=#svg_arrow/>
+                        </svg>
+                    </div>
+                    <div class="key lgt" data-cmd=jg data-arg=Z>Z+</div>
+                    <div class=key data-cmd=jh data-arg=Z>
+                        Z<sub>&#x21D2;0</sub>
+                    </div>
+                </div>
+                <div class=vgroup>
+                    <div class="key onoff" data-cmd=js data-arg=100>100</div>
+                    <div class="key onoff" data-cmd=js data-arg=10>10</div>
+                    <div class="key onoff" data-cmd=js data-arg=1>1</div>
+                    <div class="key onoff" data-cmd=js data-arg=0.1>0.1</div>
+                </div>
+                <div class=vgroup>
+                    <div class="key onoff" data-cmd=jf data-arg=100 data-gcode=F100>
+                        F<sub>100</sub>
+                    </div>
+                    <div class="key onoff" data-cmd=jf data-arg=1000 data-gcode=F1000>
+                        F<sub>1k</sub>
+                    </div>
+                    <div class="key onoff" data-cmd=jf data-arg=10000 data-gcode=F10000>
+                        F<sub>10k</sub>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="group ji">
+            <div class=vgroup>
+                <div class=cat>
+                    <div class=title>jog to</div>
+                    <div class=dsp>
+                        <div class=name>X</div>
+                        <input class="val x">
+                        <div class="unit l">mm</div>
+                    </div>
+                    <div class=dsp>
+                        <div class=name>Y</div>
+                        <input class="val y">
+                        <div class="unit l">mm</div>
+                    </div>
+                    <div class=dsp>
+                        <div class=name>Z</div>
+                        <input class="val z">
+                        <div class="unit l">mm</div>
+                    </div>
+                </div>
+                <div class=group>
+                    <div class="key onoff lbl sa x">X</div>
+                    <div class="key onoff lbl sa y">Y</div>
+                    <div class="key onoff lbl sa z">Z</div>
+                    <div class="key rld x">RX</div>
+                    <div class="key rld y">RY</div>
+                    <div class="key rld z">RZ</div>
+                </div>
+            </div>
+            <div class="vgroup np">
+                <div class=group>
+                    <div class="key dbl lit">7</div>
+                    <div class="key dbl lit">8</div>
+                    <div class="key dbl lit">9</div>
+                    <div class="key ylw bks">
+                        <svg style=transform:rotate(-90deg)>
+                            <use xlink:href=#svg_arrow/>
+                        </svg>
+                    </div>
+                    <div class="key red hg c">C</div>
+                </div>
+                <div class=group>
+                    <div class="key dbl lit">4</div>
+                    <div class="key dbl lit">5</div>
+                    <div class="key dbl lit">6</div>
+                    <div class="key lbl lit">-</div>
+                </div>
+                <div class=group>
+                    <div class="key dbl lit">1</div>
+                    <div class="key dbl lit">2</div>
+                    <div class="key dbl lit">3</div>
+                    <div class="key hg jog">&#x2713;</div>
+                    <div class="key red hg ac">AC</div>
+                </div>
+                <div class=group>
+                    <div class="key onoff lgt st jabs">Abs</div>
+                    <div class="key dbl lit">0</div>
+                    <div class="key lbl dec">.</div>
+                </div>
+            </div>
+        </div>
+        </body>
+        </html> 

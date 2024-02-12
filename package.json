@@ -4,7 +4,7 @@
   "description": "ESP Arduino addon for GRBL applications",
   "main": "./EspUnoWifi/EspUnoWifi.ino",
   "scripts": {
-    "prettify": "prettier ./EspUnoWifi/data -w --config prettier.json",
+    "prettify": "prettier ./data -w --config prettier.json",
     "tsc": "tsc",
     "compile-res": "node compile-res",
     "compile-res-debug": "node compile-res -debug",

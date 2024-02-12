@@ -41,7 +41,6 @@ typedef struct {
     char appswd[32];
     unsigned int baudrate;
     unsigned int baudrate_isp;
-    char hostName[32];
 } EEPROM_CONFIG;
 EEPROM_CONFIG econfig;
 #pragma pack(pop)
@@ -142,6 +141,7 @@ void setup() {
             WiFi.softAP(econfig.apssid);
         else
             WiFi.softAP(econfig.apssid, econfig.appswd);
+        WiFi.setHostname(econfig.apssid);
     }
     if (strlen(econfig.ssid)) {
         if (strlen(econfig.pswd))
@@ -496,6 +496,8 @@ void loop() {
                 fileResponse(avrOTA_client, ctJs, res_common_js);
             } else if (s.indexOf("netstat.js") > 0) {
                 fileResponse(avrOTA_client, ctJs, res_netstat_js);
+            } else if (s.indexOf("pendant.js") > 0) {
+                fileResponse(avrOTA_client, ctJs, res_pendant_js);
             } else if (s.indexOf("serial.js") > 0) {
                 fileResponse(avrOTA_client, ctJs, res_serial_js);
             } else if (s.indexOf("ui.js") > 0) {

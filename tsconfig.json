@@ -4,14 +4,15 @@
     "target": "es2016",
     "esModuleInterop": true,
     "strict": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "temp/dist"
   },
   
   "include": [
     "**/*.ts"
-  ],
+, "compile-res.js"  ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts"
-  ]
+  ],
 }
