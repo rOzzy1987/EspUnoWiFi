@@ -55,21 +55,25 @@
                 color: red;
             }
 
-            .group,
-            .vgroup {
+            .g,
+            .vg {
                 display: flex;
                 gap: 16px;
             }
 
-            .vgroup {
+            .vg {
                 flex-direction: column;
+            }
+            .b {
+                background: #88b;
+                border-radius: 10px;
+                padding: 5px;
+                margin: -5px;
             }
 
             .dro {
-                display: flex;
                 flex-wrap: wrap;
                 flex-grow: 0;
-                gap: 48px;
                 width: 100%;
             }
 
@@ -134,15 +138,15 @@
                 flex-wrap: wrap;
             }
 
-            .empty,
-            .key {
+            .ke,
+            .k {
                 height: 60px;
                 width: 60px;
                 font-size: 24px;
                 line-height: 24px;
             }
 
-            .key {
+            .k {
                 padding: 18px 0;
                 text-align: center;
                 position: relative;
@@ -153,73 +157,73 @@
                 cursor: pointer;
             }
 
-            .key svg {
+            .k svg {
                 width: 24px;
                 height: 24px;
                 vertical-align: bottom;
             }
 
-            .key:hover {
+            .k:hover {
                 box-shadow: 8px 8px 8px rgba(0, 0, 0, 0.4);
             }
 
-            .key:active {
+            .k:active {
                 top: 4px;
                 left: 4px;
                 box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
             }
 
-            .key.lg {
+            .k.lg {
                 width: 136px;
             }
 
-            .key.hg {
+            .k.hg {
                 height: 136px;
                 padding: 53px 0;
                 margin-bottom: -76px;
             }
 
-            .key sub {
+            .k sub {
                 font-size: 12px;
             }
 
-            .key.lgt {
+            .k.lgt {
                 background: #fed;
             }
 
-            .key.red {
+            .k.red {
                 background: #a00;
             }
 
-            .key.ylw {
+            .k.ylw {
                 background: #dd3;
             }
 
-            .key.lbl {
+            .k.lbl {
                 background: #8af;
             }
 
-            .key.dbl {
+            .k.dbl {
                 background: #259;
             }
 
-            .key.grn {
+            .k.grn {
                 background: #060;
             }
 
-            .key.dbl,
-            .key.grn,
-            .key.red {
+            .k.dbl,
+            .k.grn,
+            .k.red {
                 color: #fff;
             }
 
-            .key.dbl svg,
-            .key.grn svg,
-            .key.red svg {
+            .k.dbl svg,
+            .k.grn svg,
+            .k.red svg {
                 fill: #fff;
             }
 
-            .key.onoff:before {
+            .k.onoff:before {
                 content: '\2B24';
                 color: #300;
                 position: absolute;
@@ -228,15 +232,11 @@
                 font-size: 12px;
             }
 
-            .key.onoff.active:before {
+            .k.onoff.active:before {
                 color: red;
             }
 
             @media (max-width: 720px) {
-                #dro {
-                    gap: 12px;
-                }
-
                 .title {
                     display: none;
                     text-transform: uppercase;
@@ -247,7 +247,6 @@
                 .cat {
                     flex-direction: row;
                     flex-wrap: wrap;
-                    flex-grow: 1;
                     width: 338px;
                 }
 
@@ -257,6 +256,7 @@
 
                 .val {
                     font-size: 24px;
+                    height: 24px;
                     flex-grow: 0;
                 }
 
@@ -264,43 +264,48 @@
                     display: none;
                 }
 
-                .group,
-                .vgroup {
+                .g,
+                .vg {
                     gap: 10px;
                 }
+                
+                .b {
+                    padding: 3px;
+                    margin: -3px;
+                }
 
-                .empty,
-                .key {
+                .ke,
+                .k {
                     width: 48px;
                     height: 48px;
                     font-size: 19px;
                     line-height: 19px;
                 }
 
-                .key {
+                .k {
                     padding: 14px 0;
                 }
 
-                .key svg {
+                .k svg {
                     width: 19px;
                     height: 19px;
                 }
 
-                .key.lg {
+                .k.lg {
                     width: 106px;
                 }
 
-                .key.hg {
+                .k.hg {
                     height: 106px;
                     margin-bottom: -58px;
                     padding: 43px 0;
                 }
 
-                .key sub {
+                .k sub {
                     font-size: 10px;
                 }
 
-                .key.onoff:before {
+                .k.onoff:before {
                     top: -2px;
                 }
             }
@@ -342,7 +347,7 @@
                 />
             </symbol>
         </svg>
-        <div class="group dro">
+        <div class="g dro">
             <div class="cat mchn">
                 <div class="title">Machine</div>
                 <div class="dsp">
@@ -401,19 +406,24 @@
                 </div>
             </div>
         </div>
-        <div class="group kb">
-            <div class="vgroup">
-                <div class="group">
-                    <div class="key lg red" data-gcode="&#x18;">
+        <div class="g kb">
+            <div class="vg">
+                <div class="g b">
+                    <div class="k lg red" data-gcode="&#x18;">
                         <svg>
                             <use xlink:href="#svg_stop" />
                         </svg>
                         Stop
                     </div>
-                    <div class="key ylw" data-gcode="!">&#x2595;&#x258F;</div>
-                    <div class="key ylw" data-gcode="~">&#x25B7;</div>
+                    <div class="k ylw" data-gcode="G80">
+                        <svg>
+                            <use xlink:href="#svg_stop" />
+                        </svg>
+                    </div>
+                    <div class="k ylw" data-gcode="!">&#x2595;&nbsp;&#x258F;</div>
+                    <div class="k ylw" data-gcode="~">&#x25B7;</div>
                     <div
-                        class="key grn onoff arm"
+                        class="k grn onoff arm"
                         data-gcode="$X"
                         title="Clear alarm"
                     >
@@ -422,121 +432,139 @@
                         </svg>
                     </div>
                 </div>
-                <div class="group">
-                    <div class="vgroup">
-                        <div class="key" data-gcode="G92X0">X<sub>0</sub></div>
-                        <div class="key" data-cmd="wo" data-arg="xh">
-                            X<sub>1/2</sub>
+                <div class="g">
+                    <div class="vg">
+                        <div class="g b">
+                            <div class="vg">
+                                <div class="k" data-gcode="G92X0">X<sub>0</sub></div>
+                                <div class="k" data-cmd="wo" data-arg="xh">
+                                    X<sub>1/2</sub>
+                                </div>
+                            </div>
+                            <div class="vg">
+                                <div class="k" data-gcode="G92Y0">Y<sub>0</sub></div>
+                                <div class="k" data-cmd="wo" data-arg="yh">
+                                    Y<sub>1/2</sub>
+                                </div>
+                            </div>
+                            <div class="vg">
+                                <div class="k" data-gcode="G92Z0">Z<sub>0</sub></div>
+                                <div class="k" data-cmd="wo" data-arg="zh">
+                                    Z<sub>1/2</sub>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="g b">
+                            <div class="k lbl" data-gcode="&#x92;">
+                                F-
+                            </div>
+                            <div class="k lbl" data-gcode="&#x90;">
+                                F<sub>100%</sub>
+                            </div>
+                            <div class="k lbl" data-gcode="&#x91;">
+                                F+</sub>
+                            </div>
                         </div>
                     </div>
-                    <div class="vgroup">
-                        <div class="key" data-gcode="G92Y0">Y<sub>0</sub></div>
-                        <div class="key" data-cmd="wo" data-arg="yh">
-                            Y<sub>1/2</sub>
+                    <div class="g b">
+                        <div class="vg">
+                            <div class="k grn" data-gcode="M5S0">
+                                S<sub>0</sub>
+                            </div>
+                            <div class="k ylw" data-cmd="spn" data-arg="3">
+                                S<sub>3</sub>
+                            </div>
+                            <div class="k ylw" data-cmd="spn" data-arg="5">
+                                S<sub>5</sub>
+                            </div>
+                        </div>
+                        <div class="vg">
+                            <div class="k red" data-cmd="spn" data-arg="50">
+                                S<sub>50</sub>
+                            </div>
+                            <div class="k red" data-cmd="spn" data-arg="100">
+                                S<sub>100</sub>
+                            </div>
+                            <div class="k onoff st spd" data-cmd="spd">
+                                S<sub>CW</sub>
+                            </div>
                         </div>
                     </div>
-                    <div class="vgroup">
-                        <div class="key" data-gcode="G92Z0">Z<sub>0</sub></div>
-                        <div class="key" data-cmd="wo" data-arg="zh">
-                            Z<sub>1/2</sub>
+                    <div class="vg b">
+                        <div class="k lbl" title="Reconnect" data-cmd="conn">
+                            &#x27f3;
                         </div>
-                    </div>
-                    <div class="vgroup">
-                        <div class="key lbl" data-cmd="fd" data-arg="+">
-                            F +
+                        <div class="k ylw" title="Reset" data-cmd="rst">
+                            &#x2A3B;
                         </div>
-                        <div class="key lbl" data-cmd="fd" data-arg="-">
-                            F -
-                        </div>
-                    </div>
-                    <div class="vgroup">
-                        <div class="key grn" data-gcode="M5S0">
-                            S<sub>0</sub>
-                        </div>
-                        <div class="key red" data-cmd="spn" data-arg="100">
-                            S<sub>100</sub>
-                        </div>
-                    </div>
-                    <div class="vgroup">
-                        <div class="key ylw" data-cmd="spn" data-arg="5">
-                            S<sub>5</sub>
-                        </div>
-                        <div class="key red" data-cmd="spn" data-arg="50">
-                            S<sub>50</sub>
-                        </div>
-                    </div>
-                </div>
-                <div class="group">
-                    <div class="key lbl" title="Reconnect" data-cmd="conn">
-                        &#x27f3;
-                    </div>
-                    <div class="key ylw" title="Reset" data-cmd="rst">
-                        &#x2A3B;
                     </div>
                 </div>
             </div>
-            <div class="group">
-                <div class="vgroup">
-                    <div class="empty">
+            <div class="g">
+                <div class="g b">
+                <div class="vg">
+                    <div class="ke">
                         <div class="led st abs">Abs</div>
                         <div class="led st spn">Spn</div>
                         <div class="led st cln">Cln</div>
                     </div>
-                    <div class="key lgt" data-cmd="jg" data-arg="X-">
+                    <div class="k lgt" data-cmd="jg" data-arg="X-">
                         <svg style="transform: rotate(-90deg)">
                             <use xlink:href="#svg_arrow" />
                         </svg>
                     </div>
-                    <div class="key lgt" data-cmd="jg" data-arg="Z-">Z-</div>
-                    <div class="key" data-cmd="jh" data-arg="X">
+                    <div class="k lgt" data-cmd="jg" data-arg="Z-">Z-</div>
+                    <div class="k" data-cmd="jh" data-arg="X">
                         X<sub>&#x21D2;0</sub>
                     </div>
                 </div>
-                <div class="vgroup">
-                    <div class="key lgt" data-cmd="jg" data-arg="Y">
+                <div class="vg">
+                    <div class="k lgt" data-cmd="jg" data-arg="Y">
                         <svg>
                             <use xlink:href="#svg_arrow" />
                         </svg>
                     </div>
-                    <div class="key" data-gcode="$H">
+                    <div class="k" data-gcode="$H">
                         <svg>
                             <use xlink:href="#svg_home" />
                         </svg>
                     </div>
-                    <div class="key lgt" data-cmd="jg" data-arg="Y-">
+                    <div class="k lgt" data-cmd="jg" data-arg="Y-">
                         <svg style="transform: rotate(180deg)">
                             <use xlink:href="#svg_arrow" />
                         </svg>
                     </div>
-                    <div class="key" data-cmd="jh" data-arg="Y">
+                    <div class="k" data-cmd="jh" data-arg="Y">
                         Y<sub>&#x21D2;0</sub>
                     </div>
                 </div>
-                <div class="vgroup">
-                    <div class="empty"></div>
-                    <div class="key lgt" data-cmd="jg" data-arg="X">
+                <div class="vg">
+                    <div class="ke"></div>
+                    <div class="k lgt" data-cmd="jg" data-arg="X">
                         <svg style="transform: rotate(90deg)">
                             <use xlink:href="#svg_arrow" />
                         </svg>
                     </div>
-                    <div class="key lgt" data-cmd="jg" data-arg="Z">Z+</div>
-                    <div class="key" data-cmd="jh" data-arg="Z">
+                    <div class="k lgt" data-cmd="jg" data-arg="Z">Z+</div>
+                    <div class="k" data-cmd="jh" data-arg="Z">
                         Z<sub>&#x21D2;0</sub>
                     </div>
                 </div>
-                <div class="vgroup">
-                    <div class="key onoff" data-cmd="js" data-arg="100">
+            </div>
+            <div class="g b">
+                <div class="vg">
+                    <div class="k onoff" data-cmd="js" data-arg="100">
                         100
                     </div>
-                    <div class="key onoff" data-cmd="js" data-arg="10">10</div>
-                    <div class="key onoff" data-cmd="js" data-arg="1">1</div>
-                    <div class="key onoff" data-cmd="js" data-arg="0.1">
+                    <div class="k onoff" data-cmd="js" data-arg="10">10</div>
+                    <div class="k onoff" data-cmd="js" data-arg="1">1</div>
+                    <div class="k onoff" data-cmd="js" data-arg="0.1">
                         0.1
                     </div>
                 </div>
-                <div class="vgroup">
+                <div class="vg">
                     <div
-                        class="key onoff"
+                        class="k onoff"
                         data-cmd="jf"
                         data-arg="100"
                         data-gcode="F100"
@@ -544,7 +572,15 @@
                         F<sub>100</sub>
                     </div>
                     <div
-                        class="key onoff"
+                        class="k onoff"
+                        data-cmd="jf"
+                        data-arg="500"
+                        data-gcode="F500"
+                    >
+                        F<sub>500</sub>
+                    </div>
+                    <div
+                        class="k onoff"
                         data-cmd="jf"
                         data-arg="1000"
                         data-gcode="F1000"
@@ -552,7 +588,7 @@
                         F<sub>1k</sub>
                     </div>
                     <div
-                        class="key onoff"
+                        class="k onoff"
                         data-cmd="jf"
                         data-arg="10000"
                         data-gcode="F10000"
@@ -560,10 +596,10 @@
                         F<sub>10k</sub>
                     </div>
                 </div>
-            </div>
+            </div></div>
         </div>
-        <div class="group ji">
-            <div class="vgroup">
+        <div class="g ji">
+            <div class="vg">
                 <div class="cat">
                     <div class="title">jog to</div>
                     <div class="dsp">
@@ -582,44 +618,44 @@
                         <div class="unit l">mm</div>
                     </div>
                 </div>
-                <div class="group">
-                    <div class="key onoff lbl sa x">X</div>
-                    <div class="key onoff lbl sa y">Y</div>
-                    <div class="key onoff lbl sa z">Z</div>
-                    <div class="key rld x">RX</div>
-                    <div class="key rld y">RY</div>
-                    <div class="key rld z">RZ</div>
+                <div class="g b">
+                    <div class="k onoff lbl sa x">X</div>
+                    <div class="k onoff lbl sa y">Y</div>
+                    <div class="k onoff lbl sa z">Z</div>
+                    <div class="k rld x">RX</div>
+                    <div class="k rld y">RY</div>
+                    <div class="k rld z">RZ</div>
                 </div>
             </div>
-            <div class="vgroup np">
-                <div class="group">
-                    <div class="key dbl lit">7</div>
-                    <div class="key dbl lit">8</div>
-                    <div class="key dbl lit">9</div>
-                    <div class="key ylw bks">
+            <div class="vg b np">
+                <div class="g">
+                    <div class="k dbl lit">7</div>
+                    <div class="k dbl lit">8</div>
+                    <div class="k dbl lit">9</div>
+                    <div class="k ylw bks">
                         <svg style="transform: rotate(-90deg)">
                             <use xlink:href="#svg_arrow" />
                         </svg>
                     </div>
-                    <div class="key red hg c">C</div>
+                    <div class="k red hg c">C</div>
                 </div>
-                <div class="group">
-                    <div class="key dbl lit">4</div>
-                    <div class="key dbl lit">5</div>
-                    <div class="key dbl lit">6</div>
-                    <div class="key lbl lit">-</div>
+                <div class="g">
+                    <div class="k dbl lit">4</div>
+                    <div class="k dbl lit">5</div>
+                    <div class="k dbl lit">6</div>
+                    <div class="k lbl lit">-</div>
                 </div>
-                <div class="group">
-                    <div class="key dbl lit">1</div>
-                    <div class="key dbl lit">2</div>
-                    <div class="key dbl lit">3</div>
-                    <div class="key hg jog">&#x2713;</div>
-                    <div class="key red hg ac">AC</div>
+                <div class="g">
+                    <div class="k dbl lit">1</div>
+                    <div class="k dbl lit">2</div>
+                    <div class="k dbl lit">3</div>
+                    <div class="k grn hg jog">&#x2713;</div>
+                    <div class="k red hg ac">AC</div>
                 </div>
-                <div class="group">
-                    <div class="key onoff lgt st jabs">Abs</div>
-                    <div class="key dbl lit">0</div>
-                    <div class="key lbl dec">.</div>
+                <div class="g">
+                    <div class="k onoff lgt st jabs">Abs</div>
+                    <div class="k dbl lit">0</div>
+                    <div class="k lbl dec">.</div>
                 </div>
             </div>
         </div>

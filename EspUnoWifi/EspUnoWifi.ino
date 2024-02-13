@@ -500,6 +500,8 @@ void loop() {
                 fileResponse(avrOTA_client, ctJs, res_pendant_js);
             } else if (s.indexOf("serial.js") > 0) {
                 fileResponse(avrOTA_client, ctJs, res_serial_js);
+            } else if (s.indexOf("serialmon.js") > 0) {
+                fileResponse(avrOTA_client, ctJs, res_serialmon_js);
             } else if (s.indexOf("ui.js") > 0) {
                 fileResponse(avrOTA_client, ctJs, res_ui_js);
 

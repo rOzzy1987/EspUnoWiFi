@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "noImplicitAny": false,
-    "target": "es2016",
+    "target": "es2021",
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true,
@@ -9,10 +9,9 @@
   },
   
   "include": [
-    "**/*.ts"
-, "compile-res.js"  ],
+    "data/*.ts"
+  ],
   "exclude": [
     "node_modules",
-    "**/*.spec.ts"
   ],
 }

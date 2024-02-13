@@ -1,14 +1,16 @@
 {
-    "rootdir": "temp/",
-    "datadir": "dist/data/",
+    "sourcedir": "data/",
+    "workdir": "temp/",
+    "datadir": "dist/",
     "tempdir": "preprocessed/",
-    "outdir": "build/",
+    "outdir": "min/",
     "outputFile": "./EspUnoWifi/resources.h",
     "files": [
         "common.js",
         "netstat.js",
         "pendant.js",
         "serial.js",
+        "serialmon.js",
         "ui.js",
 
         "ui.css",

@@ -7,32 +7,39 @@ var origSize = 0;
 var minifiedSize = 0;
 
 const config = require('./resources.json');
-const outputFile = config.rootdir + config.outputFile;
+const outputFile = config.outputFile;
 const files = config.files;
-const datadir = config.rootdir + config.datadir;
-const tempdir = config.rootdir + config.tempdir;
-const outdir = config.rootdir + config.outdir;
+const datadir = config.workdir + config.datadir;
+const tempdir = config.workdir + config.tempdir;
+const outdir = config.workdir + config.outdir;
 
+
+function getFilePath(file) {
+    var parts = file.split('.');
+    if (parts[parts.length-1] == "js"){
+        return datadir + file;
+    }
+    return config.sourcedir + file;
+}
 
 async function preprocess(file, args) {
     console.log(` - Preprocessing ${file}`); 
-    var content = await fsAsync.readFile(datadir + file, {encoding: 'utf-8'});
+    var path = getFilePath(file);
+    var content = await fsAsync.readFile(path, {encoding: 'utf-8'});
+    var changed = 0;
+    do {
+        var match = /\/\* if ([a-z]+) \*\/((?:.|\n|\r)*?)(?:\/\* else \*\/((?:.|\n|\r)*?))?\/\* endif \*\//gm.exec(content);
+        if(!match) break;
+        content = content.replace(match[0], match[args.indexOf(match[1]) > -1 ? 2 : 3]);
+        changed++;
+    } while (true);
 
-    const pattern = /\/\* if ([a-z]+) \*\/((?:.|\n)*?)(?:\/\* else \*\/((?:.|\n)*?))?\/\* end \*\//gm;
-    var match;
-    var changed = false;
-    
-    while(match = pattern.exec(content))
-    {
-        content = content.replace(pattern, args.indexOf(match[1]) ? "$1" : "$2");
-        changed = true;
-    }
     if(changed) {
-        const path = tempdir + file;
+        console.log(`    ${changed} blocks processed`);
+        path = tempdir + file;
         await fsAsync.writeFile(path, content);
-        return path;
     }
-    return datadir + file;
+    return path;
 }
 
 async function main(args) {
@@ -59,7 +66,7 @@ async function main(args) {
 `);
 
     for(var file of files){
-        
+
         console.info(`Minifying ${file}`)
         var path = await preprocess(file, args);
         const hndl = await fsAsync.stat(path);
@@ -72,7 +79,6 @@ async function main(args) {
         origSize += so;
         minifiedSize += sm;
 
-        
         await fsAsync.writeFile(outdir+file, mini);
 
         ws.write(`

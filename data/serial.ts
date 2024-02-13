@@ -24,14 +24,14 @@
         private socketOpen(event: any) {
             /* if debug */
             console.log('[AS] WebSocket opened');
-            /* end */
+            /* endif */
             if (this.onOpen != null) this.onOpen(event);
         }
 
         private socketClose(event: any) {
             /* if debug */
             console.log('[AS] WebSocket closed');
-            /* end */
+            /* endif */
             if (this.onClose != null) this.onClose(event);
         }
 
@@ -68,10 +68,18 @@
             }
 
             this._lastMsg = null;
-            if (this.onMessage != null) this.onMessage(str);
+            if (this.onMessage != null) {
+                /* if serilog */
+                console.log('[AS] sending', str);
+                /* endif */
+                this.onMessage(str);
+            }
         }
 
         private async handleBaud(baud: number = NaN): Promise<number> {
+            /* if local */
+            return baud??115200;
+            /* else */
             var url = '/getbaudrate';
             if (!Number.isNaN(baud)) {
                 url += `?baudrate=${baud}`;
@@ -85,11 +93,8 @@
             } catch (e) {
                 console.error('[AS] failed to get/set baudrate');
             }
-            /* if debug */
-            return 115200;
-            /* else */
             return NaN;
-            /* end */
+            /* endif */
         }
 
         // Public methods
@@ -98,18 +103,19 @@
             if (this._socket?.readyState == 1) {
                 /* if debug */
                 console.log('[AS] WebSocket already open!');
-                /* end */
+                /* endif */
                 return;
             }
 
             /* if debug */
             console.log('[AS] Opening WebSocket...');
-            /* end */
-
-            /* if debug */
-            this._hostName = '192.168.0.169';
-            /* end */
-            const s = new WebSocket(`ws://${this._hostName}:81`, 'arduino');
+            /* endif */
+            var s: WebSocket;
+            /* if local */
+            s = new WebSocket(`ws://192.168.0.169:81`, 'arduino');
+            /* else */
+            s = new WebSocket(`ws://${this._hostName}:81`, 'arduino');
+            /* endif */
             s.onerror = (e) => this.socketError(e);
             s.onclose = (e) => this.socketClose(e);
             s.onopen = (e) => this.socketOpen(e);
@@ -120,9 +126,9 @@
         public send(msg: string) {
             if (this._socket?.readyState != 1) return;
             this._socket.send(msg);
-            /* if debug */
-            // console.log('[AS] sending', msg);
-            /* end */
+            /* if serilog */
+            console.log('[AS] sending', msg);
+            /* endif */
         }
 
         public sendln(msg) {
@@ -137,18 +143,22 @@
             this.handleBaud(baud);
             /* if debug */
             console.log('[AS] Setting baud rate', baud);
-            /* end */
+            /* endif */
         }
 
         public async reset(): Promise<any> {
             /* if debug */
             console.log('[AS] Resetting Arduino');
-            /* end */
+            /* endif */
+            /* if local */
+            console.warn('[AS] Dummy reset')
+            /* else */
             try {
                 await fetch('/reset', { method: 'POST' });
             } catch (e) {
                 console.error('[AS] Failed to reset arduino');
             }
+            /* endif */
         }
     }
 

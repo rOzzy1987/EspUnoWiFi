@@ -19,7 +19,7 @@ window.addEventListener('load', async () => {
     }
 
     function loadData(): INetstatData {
-        /* if dummynetstat */
+        /* if local */
         var data = {
             ap: { ssid: 'EspDebugAp', password: 'Passw0rd' },
             client: { ssid: 'PrettyFly', password: 'ForaWiFi' },
@@ -34,8 +34,8 @@ window.addEventListener('load', async () => {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'netstat', false);
         xhr.send();
-        return JSON.parse(xhr.response) as INetstatData;
-        /* end */
+        return JSON.parse(xhr.responseText) as INetstatData;
+        /* endif */
     }
 
     const data = loadData();

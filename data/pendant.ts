@@ -7,6 +7,7 @@ window.addEventListener('load', () => {
         isActive: boolean = false;
         speed: number = 0;
         max: number = 1000;
+        cw: boolean = true;
     }
 
     class FeedStatus {
@@ -20,6 +21,7 @@ window.addEventListener('load', () => {
         feed: number = 1000;
         axis: 'x' | 'y' | 'z' = 'x';
         deleteValueOnKey: boolean = true;
+        absolute: boolean = true;
     }
 
     class Coordinate {
@@ -42,7 +44,7 @@ window.addEventListener('load', () => {
         feed: FeedStatus = new FeedStatus();
         mpos: Coordinate = new Coordinate();
         wpos: Coordinate = new Coordinate();
-        woff?: Coordinate = null;
+        woff: Coordinate = new Coordinate();
 
         state: string = 'Idle';
         jog: JogStatus = new JogStatus();
@@ -52,7 +54,7 @@ window.addEventListener('load', () => {
     class GrblPendant {
         private status: GrblStatus = new GrblStatus();
         private _int_ref: number | null = null;
-        private jogAbsolute: boolean = false;
+        private _alarm_int_ref: number | null = null;
 
         private getGrblStatus() {
             if (this.status.state != 'Idle') return;
@@ -134,6 +136,10 @@ window.addEventListener('load', () => {
             this.updateSpindleSpeed();
         }
 
+        private updateSpindleDir() {
+            $.tc('.st.spd', 'active', this.status.spindle.cw);
+        }
+
         private updateIsLaser() {
             var val = this.status.spindle.isLaser ? '%' : 'Rpm';
 
@@ -146,28 +152,27 @@ window.addEventListener('load', () => {
         }
 
         private updateCoords() {
-            var d = this.status.isMetric ? 2 : 3;
-            $.set('.st.wx', this.status.wpos.x.toFixed(d));
-            $.set('.st.wy', this.status.wpos.y.toFixed(d));
-            $.set('.st.wz', this.status.wpos.z.toFixed(d));
-            $.set('.st.mx', this.status.mpos.x.toFixed(d));
-            $.set('.st.my', this.status.mpos.y.toFixed(d));
-            $.set('.st.mz', this.status.mpos.z.toFixed(d));
+            const s = this.status;
+            var d = s.isMetric ? 2 : 3;
+            $.set('.st.wx', s.wpos.x.toFixed(d));
+            $.set('.st.wy', s.wpos.y.toFixed(d));
+            $.set('.st.wz', s.wpos.z.toFixed(d));
+            $.set('.st.mx', s.mpos.x.toFixed(d));
+            $.set('.st.my', s.mpos.y.toFixed(d));
+            $.set('.st.mz', s.mpos.z.toFixed(d));
         }
-
-        private _alarm_int_ref: number | null;
 
         private updateState() {
             const s = this.status.state;
             $.set('.st.sttxt', s);
             if (s == 'Alarm' && !this._alarm_int_ref)
                 this._alarm_int_ref = setInterval(
-                    () => $.tc('.key.arm', 'active'),
+                    () => $.tc('.k.arm', 'active'),
                     333
                 );
             if (s != 'Alarm' && this._alarm_int_ref) {
                 clearInterval(this._alarm_int_ref);
-                $.tc('.key.arm', 'active', false);
+                $.tc('.k.arm', 'active', false);
             }
         }
 
@@ -182,24 +187,30 @@ window.addEventListener('load', () => {
                 $.tc(e, 'active', e.dataset['arg'] == this.status.jog.feed);
             });
         }
+        private updateJogAbsolute() {
+            $.do('.onoff.st.jabs', (e) => {
+                $.tc(e, 'active', this.status.jog.absolute);
+            });
+        }
 
         private parseGrblStatus(data) {
+            const t = this;
             var codes = data.split(' ');
             for (var code of codes) {
                 code = code.toUpperCase();
-                if (code == 'G21') this.setMetric(true);
-                if (code == 'G20') this.setMetric(false);
-                if (code == 'G90') this.setAbsolute(true);
-                if (code == 'G91') this.setAbsolute(false);
-                if (code == 'M3' || code == 'M4') this.setSpindle(true);
-                if (code == 'M5') this.setSpindle(false);
-                if (code == 'M7' || code == 'M8') this.setCoolant(true);
-                if (code == 'M9') this.setCoolant(false);
+                if (code == 'G21') t.setMetric(true);
+                if (code == 'G20') t.setMetric(false);
+                if (code == 'G90') t.setAbsolute(true);
+                if (code == 'G91') t.setAbsolute(false);
+                if (code == 'M3' || code == 'M4') t.setSpindle(true);
+                if (code == 'M5') t.setSpindle(false);
+                if (code == 'M7' || code == 'M8') t.setCoolant(true);
+                if (code == 'M9') t.setCoolant(false);
 
                 var fMatch = /^F([0-9]+(?:\.[0-9]*)?)$/g.exec(code);
-                if (fMatch) this.setFeed(fMatch[1]);
+                if (fMatch) t.setFeed(fMatch[1]);
                 var sMatch = /^S([0-9]+(?:\.[0-9]*)?)$/g.exec(code);
-                if (sMatch) this.setSpindleSpeed(sMatch[1]);
+                if (sMatch) t.setSpindleSpeed(sMatch[1]);
             }
         }
 
@@ -212,21 +223,24 @@ window.addEventListener('load', () => {
                 if (match) {
                     var kw = match[1];
                     if (kw == 'MPos') {
-                        part = part.substring(4);
+                        part = part.substring(5);
                         s.mpos.x = Number(part);
                         s.mpos.y = Number(parts[++i]);
                         s.mpos.z = Number(parts[++i]);
+                        s.wpos.x = s.mpos.x - s.woff.x;
+                        s.wpos.y = s.mpos.y - s.woff.y;
+                        s.wpos.z = s.mpos.z - s.woff.z;
                     } else if (kw.startsWith('WC')) {
                         part = part.substring(kw.length + 1);
-                        s.woff ??= new Coordinate();
                         s.woff.x = Number(part);
                         s.woff.y = Number(parts[++i]);
                         s.woff.z = Number(parts[++i]);
+
                         s.wpos.x = s.mpos.x - s.woff.x;
                         s.wpos.y = s.mpos.y - s.woff.y;
                         s.wpos.z = s.mpos.z - s.woff.z;
                     } else if (kw == 'WPos') {
-                        (part = part.substring(4)), (s.wpos.x = Number(part));
+                        (part = part.substring(5)), (s.wpos.x = Number(part));
                         s.wpos.y = Number(parts[++i]);
                         s.wpos.z = Number(parts[++i]);
                         s.woff.x = s.wpos.x - s.mpos.x;
@@ -267,42 +281,51 @@ window.addEventListener('load', () => {
             }
         }
 
-        private parseMessage(msg) {
-            var lines = msg.replace('\r', '\n').split('\n');
+        private parseMessage(msg: string) {
+            const t = this;
+            var lines = msg.replaceAll('\r', '\n').split('\n');
             for (var l of lines) {
+                /* if gcodelog */
+                if(l == "") continue;
+                console.log('[PND] line received:', l);
+                /* endif */
                 l = l.trim();
-                var gcodeStatusMatch = /^\[(?:GC:)?(.*)\]$/gi.exec(l),
-                    versionMatch =
-                        /^\[(?:ver:)?(\d+)\.?(\d+)([a-z]+)(.*):\]$/gi.exec(l),
-                    posMatch = /^\<(.*)\>$/gi.exec(l),
-                    varMatch = /^\$(\d*)=(\d+\.\d+)/gi.exec(l);
-                if (gcodeStatusMatch) {
-                    this.parseGrblStatus(gcodeStatusMatch[1]);
-                } else if (versionMatch) {
-                    this.parseVersion(
+                var gcodeStatusMatch = /^\[(?:GC:)?(.*)\]$/gi.exec(l);
+                var versionMatch =
+                    /^\[(?:ver:)?(\d+)\.?(\d+)([a-z]+)(.*):\]$/gi.exec(l);
+                var posMatch = /^\<(.*)\>$/gi.exec(l);
+                var varMatch = /^\$(\d*)=(\d+\.\d+)/gi.exec(l);
+
+                if (versionMatch) {
+                    t.parseVersion(
                         versionMatch[1],
                         versionMatch[2],
                         versionMatch[3]
                     );
+                } else if (gcodeStatusMatch) {
+                    t.parseGrblStatus(gcodeStatusMatch[1]);
                 } else if (posMatch) {
                     var parts = posMatch[1].split('|');
-                    this.status.state =
+                    t.status.state =
                         parts.length == 1
                             ? parts[0].substring(0, parts[0].indexOf(','))
                             : parts[0];
-                    for (var part of parts) this.parseStatus(part);
+                    for (var part of parts) t.parseStatus(part);
                 } else if (varMatch) {
-                    this.parseVar(varMatch[1], varMatch[2]);
+                    t.parseVar(varMatch[1], varMatch[2]);
                 }
             }
         }
 
         private handleKey(e: Event) {
+            const t = this;
+            const s = t.status;
+
             var key = e.currentTarget as HTMLElement;
             var _s = (_d) => {
-                /* if debug */
-                console.log('[PND]', _d);
-                /* end */
+                /* if gcodelog */
+                console.log('[PND] GCode', _d);
+                /* endif */
                 Ser.sendln(_d);
             };
 
@@ -318,48 +341,46 @@ window.addEventListener('load', () => {
                     case 'wo':
                         switch (arg) {
                             case 'xh':
-                                _s('G92X' + this.status.wpos.x / 2);
+                                _s('G92X' + s.wpos.x / 2);
                                 break;
                             case 'yh':
-                                _s('G92Y' + this.status.wpos.y / 2);
+                                _s('G92Y' + s.wpos.y / 2);
                                 break;
                             case 'zh':
-                                _s('G92Z' + this.status.wpos.z / 2);
+                                _s('G92Z' + s.wpos.z / 2);
                                 break;
                         }
                         break;
                     case 'fd':
-                        var f = this.status.feed.current;
+                        var f = s.feed.current;
                         var fa = Math.pow(10, 0.2);
                         f = Math.round(arg == '+' ? f * fa : f / fa);
                         _s('F' + f.toFixed(3));
                         break;
                     case 'spn':
-                        var s = (this.status.spindle.max * Number(arg)) / 100;
-                        _s('M3S' + s.toFixed());
+                        _s((s.spindle.cw ? 'M3S' : 'M4S') + ((s.spindle.max * Number(arg)) / 100).toFixed());
+                        break;
+                    case 'spd':
+                        s.spindle.cw = !s.spindle.cw;
+                        t.updateSpindleDir()
                         break;
                     case 'js':
-                        this.status.jog.step = Number(arg);
-                        this.updateJogStep();
+                        s.jog.step = Number(arg);
+                        t.updateJogStep();
                         break;
                     case 'jf':
-                        this.status.jog.feed = Number(arg);
-                        this.updateJogFeed();
+                        s.jog.feed = Number(arg);
+                        t.updateJogFeed();
                         break;
                     case 'jg':
-                        var gc =
-                            arg +
-                            this.status.jog.step.toFixed(3) +
-                            'F' +
-                            this.status.jog.feed.toFixed(1);
                         _s(
-                            this.status.jog.supported
-                                ? '$J=G91' + gc
-                                : 'G91G1' + gc
+                            `${
+                                s.jog.supported ? '$J=G91' : 'G91G1'
+                            }${arg}${s.jog.step.toFixed(3)}F${s.jog.feed.toFixed()}`
                         );
                         break;
                     case 'jh':
-                        _s('G90G1' + arg + '0' + this.status.jog.feed);
+                        _s('G90G1' + arg + '0F' + s.jog.feed);
                         break;
                     case 'conn':
                         Ser.connect();
@@ -391,32 +412,53 @@ window.addEventListener('load', () => {
         }
 
         private jogAxisChanged() {
-            const x = this.status.jog.axis;
-            this.updateJogAxis();
-            this.updateJogInputs();
-            this.status.jog.deleteValueOnKey =
+            const t = this;
+            const x = t.status.jog.axis;
+            t.updateJogAxis();
+            t.updateJogInputs();
+            t.status.jog.deleteValueOnKey =
                 $.sng('.ji input.' + x).value ==
-                this.status.wpos[x].toFixed(this.status.isMetric ? 2 : 3);
+                t.status.wpos[x].toFixed(t.status.isMetric ? 2 : 3);
+        }
+
+        private jog() {
+            const t = this;
+            const s = t.status;
+            t.updateJogInputs();
+            const x = $.num.n2u($.sng('.ji  input.x').value);
+            const y = $.num.n2u($.sng('.ji  input.y').value);
+            const z = $.num.n2u($.sng('.ji  input.z').value);
+
+            const abs = s.jog.absolute ? 'G90' : 'G91';
+            const gcode =
+                `${s.jog.supported ? '$J=' + abs : abs + 'G1'}` +
+                `${x == '' ? '' : 'X' + x}${y == '' ? '' : 'Y' + y}${z == '' ? '' : 'Z' + z}F${s.jog.feed}`;
+
+            /* if gcodelog */
+            console.log('[PND] GCode', gcode);
+            /* endif */
+            Ser.sendln(gcode);
         }
 
         private handleJogKey(e: Event) {
+            const t = this;
+            const s = t.status;
+
             var k = e.target as HTMLElement;
             const a = $.which(k, ['x', 'y', 'z']) as 'x' | 'y' | 'z';
-            const i = $.sng('.ji input.' + this.status.jog.axis);
+            const i = $.sng('.ji input.' + s.jog.axis);
             const ia = $.sng('.ji input.' + a);
-            const s = this.status;
-
             switch (
-                $.which(k, ['sa', 'lit', 'rld', 'bks', 'abs', 'dec', 'jog'])
+                $.which(k, ['sa', 'lit', 'rld', 'bks', 'jabs', 'dec', 'jog', 'c', 'ac'])
             ) {
                 case 'sa':
                     if (a == s.jog.axis) return;
                     s.jog.axis = a;
-                    this.jogAxisChanged();
+                    t.jogAxisChanged();
                     break;
                 case 'rld':
                     ia.value = s.wpos[a];
-                    this.updateJogInputs();
+                    t.updateJogInputs();
                     break;
                 case 'lit':
                     i.value += k.innerText;
@@ -428,20 +470,18 @@ window.addEventListener('load', () => {
                     i.value += $.num.dp;
                     break;
                 case 'jabs':
-                    this.jogAbsolute = !this.jogAbsolute;
+                    s.jog.absolute = !s.jog.absolute;
+                    t.updateJogAbsolute();
                     break;
-
                 case 'jog':
-                    this.updateJogInputs();
-                    const x = $.num.n2u($.sng('.ji  input.x').value);
-                    const y = $.num.n2u($.sng('.ji  input.y').value);
-                    const z = $.num.n2u($.sng('.ji  input.z').value);
-
-                    const abs = this.jogAbsolute ? 'G90' : 'G91';
-                    Ser.sendln(
-                        `${s.jog.supported ? '$J=' + abs : abs + 'G1'}${x == '' ? '' : 'X' + x}${y == '' ? '' : 'Y' + y}${z == '' ? '' : 'Z' + z}F${s.jog.feed}`
-                    );
+                    t.jog();
                     break;
+                case 'c':
+                    i.value = '';
+                    break;
+                case 'ac':
+                    $.do('.ji input', e => e.value = '');
+                    break; 
                 default:
                     console.warn(
                         '[PND] Unknown jog key pressed:',
@@ -458,44 +498,54 @@ window.addEventListener('load', () => {
         }
 
         private initJog() {
-            this.jogAxisChanged();
+            const t = this;
+            const s = t.status;
+            t.jogAxisChanged();
+            t.updateJogAbsolute();
 
             $.do('.ji input', (i) => {
                 i.addEventListener('keydown', (e: KeyboardEvent) => {
                     const a = $.which(i, ['x', 'y', 'z']) as 'x' | 'y' | 'z';
-                    this.status.jog.axis = a;
-                    this.updateJogAxis();
+                    s.jog.axis = a;
+                    t.updateJogAxis();
 
-                    if (this.status.jog.deleteValueOnKey) {
+                    if (s.jog.deleteValueOnKey) {
                         i.value = '';
-                        this.status.jog.deleteValueOnKey = false;
+                        s.jog.deleteValueOnKey = false;
                     }
                 });
                 i.addEventListener('blur', () => {
-                    this.jogAxisChanged();
+                    t.jogAxisChanged();
                 });
             });
         }
 
         private init() {
-            this.updateAbsolute();
-            this.updateCoolant();
-            this.updateCoords();
-            this.updateFeed();
-            this.updateIsLaser();
-            this.updateJogFeed();
-            this.updateJogStep();
-            this.updateMetric();
-            this.updateSpindle();
-            this.updateSpindleSpeed();
-            this.updateState();
+            const t = this;
 
-            this.getPos();
-            setTimeout(() => this.getVars(), 100);
+            t.updateAbsolute();
+            t.updateCoolant();
+            t.updateCoords();
+            t.updateFeed();
+            t.updateIsLaser();
+            t.updateJogFeed();
+            t.updateJogStep();
+            t.updateMetric();
+            t.updateSpindle();
+            t.updateSpindleDir();
+            t.updateSpindleSpeed();
+            t.updateState();
+
+            t.getBuild();
+            setTimeout(() => t.getVars(), 100);
+            /* if nopoll */
+            setTimeout(() => t.ping(), 200);
+            /* else */
             setTimeout(
-                () => (this._int_ref = setInterval(() => this.ping(), 1000)),
+                () => (t._int_ref = setInterval(() => t.ping(), 1000)),
                 200
             );
+            /* endif */
         }
 
         private destroy() {
@@ -506,21 +556,19 @@ window.addEventListener('load', () => {
         }
 
         public constructor() {
-            Ser.onMessage = (m) => this.parseMessage(m);
+            const t = this;
+            Ser.onMessage = (m) => t.parseMessage(m);
             Ser.onOpen = () => {
-                this.init();
-                this.initJog();
+                t.init();
+                t.initJog();
             };
-            Ser.onClose = () => this.destroy();
-            Ser.onError = () => this.destroy();
+            Ser.onClose = () => t.destroy();
+            Ser.onError = () => t.destroy();
 
             Ser.connect();
 
-            $.do('.kb .key', (e) => (e.onclick = (ev) => this.handleKey(ev)));
-            $.do(
-                '.ji .key',
-                (e) => (e.onclick = (ev) => this.handleJogKey(ev))
-            );
+            $.do('.kb .k', (e) => (e.onclick = (ev) => t.handleKey(ev)));
+            $.do('.ji .k', (e) => (e.onclick = (ev) => t.handleJogKey(ev)));
         }
     }
 
