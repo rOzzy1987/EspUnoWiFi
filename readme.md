@@ -1,6 +1,8 @@
 # esp8266 Uno Wifi
 
-This project runs on esp8266 and provides serial bridge services for uno,The first time you need to use the serial port to upload the sketch to esp8266.Then you can use WIFI SerialPort like using USB
+*This repository is based on (https://github.com/DIYOSEPP/EspUnoWiFi). However, the purpose of this project is to control your CNC instead off fiddling around in OSEPPBlock.*
+
+This project runs on esp8266 and provides serial bridge services for uno,The first time you need to use the serial port to upload the sketch to esp8266.Then you can use WIFI SerialPort like using USB.
 
 you can:
 
