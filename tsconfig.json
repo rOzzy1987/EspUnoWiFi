@@ -1,17 +1,17 @@
 {
   "compilerOptions": {
     "noImplicitAny": false,
-    "target": "es2016",
+    "target": "es2021",
     "esModuleInterop": true,
     "strict": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "temp/dist"
   },
   
   "include": [
-    "**/*.ts"
+    "data/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "**/*.spec.ts"
-  ]
+  ],
 }

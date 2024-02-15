@@ -19,12 +19,14 @@ window.addEventListener('load', async () => {
     }
 
     function loadData(): INetstatData {
-        /* debug */
+        /* if local */
         var data = {
             ap: { ssid: 'EspDebugAp', password: 'Passw0rd' },
             client: { ssid: 'PrettyFly', password: 'ForaWiFi' },
             status: {
                 available: ['FulesKancso', 'WifiCola'],
+                ip: '192.168.0.169',
+                subnet: '255.255.255.0',
             },
         };
         return data;
@@ -32,8 +34,8 @@ window.addEventListener('load', async () => {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', 'netstat', false);
         xhr.send();
-        return JSON.parse(xhr.response) as INetstatData;
-        /* end */
+        return JSON.parse(xhr.responseText) as INetstatData;
+        /* endif */
     }
 
     const data = loadData();

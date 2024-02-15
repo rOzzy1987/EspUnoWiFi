@@ -1,0 +1,79 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+body {
+    font-family: sans-serif;
+}
+.ed-dd {
+    width: 120px;
+    height: 24px;
+    position: relative;
+}
+.ed-dd * {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+.ed-dd select {
+    width: 120px;
+}
+.ed-dd input {
+    width: 100px;
+}
+input,
+select {
+    font-size: 12pt;
+    white-space: pre;
+    border: none;
+    padding: 2px;
+    height: 24px;
+    border-radius: 4px;
+}
+input:focus,
+select:focus {
+    outline: 0;
+}
+#oly {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    position: fixed;
+    width: 100svw;
+    height: 100svh;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    z-index: 100;
+}
+#oly a:active,
+#oly a:link,
+#oly a:visited {
+    color: #fff;
+    background-color: #5f9ea0;
+    text-decoration: none;
+    padding: 8px 24px;
+    font-size: 16pt;
+    border-radius: 20px;
+}
+.mnu {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    font-size: 12px;
+    line-height: 24px;
+}
+.mnu a:link,
+.mnu a:visited {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+}
+.mnu a:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
