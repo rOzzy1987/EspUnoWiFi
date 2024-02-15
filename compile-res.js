@@ -28,9 +28,21 @@ async function preprocess(file, args) {
     var content = await fsAsync.readFile(path, {encoding: 'utf-8'});
     var changed = 0;
     do {
-        var match = /\/\* if ([a-z]+) \*\/((?:.|\n|\r)*?)(?:\/\* else \*\/((?:.|\n|\r)*?))?\/\* endif \*\//gm.exec(content);
-        if(!match) break;
-        content = content.replace(match[0], match[args.indexOf(match[1]) > -1 ? 2 : 3]);
+        var pattern = /\/\* if ([a-z]+?) \*\/((?:.|\n|\r)*?)(?:\/\* else \*\/((?:.|\n|\r)*?))?\/\* endif \*\//gm;
+        var lastMatch = null;
+        do { 
+            // Find the last match to ensure lazy matching compatibility with embedded statement blocks
+            // With each call, pattern's search start index will increment
+            // this is a very resource intensive task, but I don't have any other solutions in mind right now
+            var match = pattern.exec(content);
+            if (match) {
+                lastMatch = match;
+                pattern.lastIndex = match.index + 5;
+            }
+        } while (match);
+        if(!lastMatch) break;
+
+        content = content.replace(lastMatch[0], lastMatch[args.indexOf(lastMatch[1]) > -1 ? 2 : 3]);
         changed++;
     } while (true);
 
@@ -66,6 +78,16 @@ async function main(args) {
 `);
 
     for(var file of files){
+        var m = /^([a-z]+):(.+)$/gmi.exec(file);
+        if(m) {
+            if (args.indexOf(m[1]) == -1){
+                console.log(`Skipping ${m[2]}`);
+                continue;
+            } else {
+                file = m[2];
+            }
+        }
+
 
         console.info(`Minifying ${file}`)
         var path = await preprocess(file, args);

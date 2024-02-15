@@ -13,6 +13,8 @@
         "serialmon.js",
         "ui.js",
 
+        "debug:test.js",
+
         "ui.css",
 
         "netstat.html",

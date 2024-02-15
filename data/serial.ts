@@ -162,5 +162,94 @@
         }
     }
 
+    /* if dummyserial */
+    class DummySerialClass {
+
+        public onError: ((e: Event) => void) | null = null;
+        public onClose: ((e: Event) => void) | null = null;
+        public onOpen: ((e: Event) => void) | null = null;
+        public onMessage: ((msg: string) => void) | null = null;
+
+        private int: number = setInterval(()=> this.onMessage && this.onMessage("dummy message"), 5000);
+
+        public connect() {
+            console.log('[AS] Opening WebSocket...');
+            this.onOpen(new Event("ws-open"));
+        }
+
+        public send(msg: string) {
+            console.log('[AS] sending', msg);
+            setTimeout(() => this.onMessage && this.onMessage(`Response for "${msg}"`), 100);
+        }
+
+        public sendln(msg) {
+            this.send(msg + '\n');
+        }
+
+        public async getBaud(): Promise<number> {
+            return new Promise<number>((r,rj) => {r(9600)});
+        }
+
+        public setBaud(baud: number) {
+            console.log('[AS] Setting baud rate', baud);
+        }
+
+        public async reset(): Promise<any> {
+            console.log('[AS] Resetting Arduino');
+        }
+    }
+    globalThis.ArduinoSerial = new DummySerialClass();
+    /* else */
+    /* if dummygrbl */
+    class DummyGrblClass {
+
+        public onError: ((e: Event) => void) | null = null;
+        public onClose: ((e: Event) => void) | null = null;
+        public onOpen: ((e: Event) => void) | null = null;
+        public onMessage: ((msg: string) => void) | null = null;
+
+        private int: number = setInterval(()=> this.onMessage && this.onMessage("<Run|MPos:0.000,0.000,0.000|WCO:12.000,15.000,0.000>\n[GC:G91 G20 F10000 S0]"), 5000);
+
+        public connect() {
+            console.log('[AS] Opening WebSocket...');
+            this.onOpen(new Event("ws-open"));
+        }
+
+        public send(msg: string) {
+            console.log('[AS] sending', msg);
+            var rsp = "ok";
+            if (msg == "$"){
+                rsp = "$32=1\n$30=1000";
+            } else if (msg = "$G") {
+                rsp = "[GC:G91 G20 F10000 S0]";
+            } else if (msg == "?") {
+                rsp = "<Run|MPos:0.000,0.000,0.000|WCO:12.000,15.000,0.000>"
+            } else if (msg == "$I") {
+                rsp = "[0.8g.asdgash:]"
+            }
+
+            setTimeout(() => this.onMessage && this.onMessage(rsp), 300);
+        }
+
+        public sendln(msg) {
+            this.send(msg + '\n');
+        }
+
+        public async getBaud(): Promise<number> {
+            return new Promise<number>((r,rj) => {r(9600)});
+        }
+
+        public setBaud(baud: number) {
+            console.log('[AS] Setting baud rate', baud);
+        }
+
+        public async reset(): Promise<any> {
+            console.log('[AS] Resetting Arduino');
+        }
+    }
+    globalThis.ArduinoSerial = new DummyGrblClass();
+    /* else */
     globalThis.ArduinoSerial = new ArduinoSerialClass();
+    /* endif */
+    /* endif */
 })();

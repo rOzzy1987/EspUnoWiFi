@@ -1,6 +1,8 @@
 window.addEventListener('load', () => {
-    const $ = globalThis.$;
-    const Ser = globalThis.ArduinoSerial;
+    const G = globalThis;
+    const $ = G.$;
+    const Ser = G.ArduinoSerial;
+    const _LSK = "GrblPendant.State";
 
     class SpindleStatus {
         isLaser: boolean = true;
@@ -555,12 +557,29 @@ window.addEventListener('load', () => {
             }
         }
 
+        
+
+        public saveState() {
+            localStorage.setItem(_LSK, JSON.stringify(this.status));
+        }
+
+        public loadState() {
+            try {
+                var a = localStorage.getItem(_LSK);
+                var b = JSON.parse(a) as GrblStatus;
+                this.status.jog = b.jog;
+            } catch(e){
+                console.warn('[PND] Loading status failed:', e);
+            }
+        }
+
         public constructor() {
             const t = this;
             Ser.onMessage = (m) => t.parseMessage(m);
             Ser.onOpen = () => {
                 t.init();
                 t.initJog();
+                t.loadState();
             };
             Ser.onClose = () => t.destroy();
             Ser.onError = () => t.destroy();
@@ -572,5 +591,7 @@ window.addEventListener('load', () => {
         }
     }
 
-    globalThis.pendant = new GrblPendant();
+    G.pendant = new GrblPendant();
+    document.addEventListener('click', () => G.pendant.saveState());
+    document.addEventListener('keyup', () => G.pendant.saveState());
 });

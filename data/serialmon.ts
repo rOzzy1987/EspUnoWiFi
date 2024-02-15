@@ -1,5 +1,6 @@
 window.addEventListener('load', () => {
     const $ = globalThis.$;
+    const _LSK = 'SerialMonitor.History';
     const Ser = globalThis.ArduinoSerial;
 
     class SerialMonitor {
@@ -56,7 +57,7 @@ window.addEventListener('load', () => {
                     t._msg.value = t.history[t.historyIdx];
                 }
                 /* if debug */
-                console.log(`history ${t.historyIdx}`);
+                console.log(`[SMon] history ${t.historyIdx}`);
                 /* endif */
             }
             if (ev.key == 'ArrowDown') {
@@ -72,7 +73,7 @@ window.addEventListener('load', () => {
                     t._msg.value = t.history[t.historyIdx];
                 }
                 /* if debug */
-                console.log(`history ${t.historyIdx}`);
+                console.log(`[SMon] history ${t.historyIdx}`);
                 /* endif */
             }
         }
@@ -97,15 +98,17 @@ window.addEventListener('load', () => {
             t._msg.select();
 
             var last = t.history[t.history.length - 1];
-            if (!last || last != text) {
+            if (last != text) {
                 t.history.push(text);
                 if (t.history.length > 60) {
                     t.history = t.history.slice(t.history.length - 50);
                 }
                 t._hstC.innerHTML = t.history.map((h, i) => `<div data-idx="${i}">${h}</div>`).join('');
             }
-            t.historyIdx = history.length - 1;
+            t.historyIdx = t.history.length - 1;
             t.historyTemp = '';
+
+            localStorage.setItem(_LSK, JSON.stringify(t.history));
         }
 
         private socketClosed() {
@@ -190,14 +193,18 @@ window.addEventListener('load', () => {
                 t._ovrly.style.display = 'none';
             };
             Ser.onMessage = (m) => t.displayMessage(m);
-        
-            // Page setup
-        
             Ser.getBaud().then((v) => {
                 t._baudTxt.value = v;
             });
         
             Ser.connect();
+
+            try {
+                const h = JSON.parse(localStorage.getItem(_LSK)) as string[];
+                t.history = Array.isArray(h) ? h : [];
+            } catch(e) {
+                console.warn('[SMon] history load failed', e)
+            }
         }
     }   
     
