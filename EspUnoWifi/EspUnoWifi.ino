@@ -27,6 +27,8 @@
 #include "resources.h"
 #include "basicHttp.h"
 
+#define OTA_PASSWORD "GrblOTA"
+
 const char default_router_ssid[] = "";  // your router ssid
 const char default_router_pswd[] = "";  // your router password
 
@@ -153,6 +155,7 @@ void setup() {
     }
     resetTarget();
     ArduinoOTA.begin(false);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
 
     avrOTA.begin();
     msgserver.begin();
