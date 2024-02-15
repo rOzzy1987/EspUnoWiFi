@@ -14,6 +14,13 @@ const tempdir = config.workdir + config.tempdir;
 const outdir = config.workdir + config.outdir;
 
 
+function ensureDirectoryExists(path) {
+    if (fs.existsSync(path)) return;
+    console.log(` Creating directory ${path}`);
+    fs.mkdirSync(path);
+}
+
+
 function getFilePath(file) {
     var parts = file.split('.');
     if (parts[parts.length-1] == "js"){
@@ -55,6 +62,12 @@ async function preprocess(file, args) {
 }
 
 async function main(args) {
+    console.log('Ensuring working directories exist');
+    ensureDirectoryExists(datadir); // should already exist because of tsc
+    ensureDirectoryExists(tempdir);
+    ensureDirectoryExists(outdir);
+
+
     console.log(`Compiling ${config.files.length} files...\n`);
     args = args.slice(2);
     console.log(`Flags used:\n   ${args.join('\n   ')}\n\n`);

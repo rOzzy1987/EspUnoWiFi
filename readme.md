@@ -32,8 +32,7 @@ No matter how you connect, they are all equivalent
     - [4. upload sketch to uno via OTA](#4-upload-sketch-to-uno-via-ota)
     - [5. upload sketch to esp8266(esp-01s) via OTA](#5-upload-sketch-to-esp8266esp-01s-via-ota)
     - [6. Web browser Serial monitor](#6-web-browser-serial-monitor)
-    - [7. Using arduinoOTA and TCP Serial Monitors in oseppBlock](#7-using-arduinoota-and-tcp-serial-monitors-in-oseppblock)
-    - [8. Virtual Joystick](#8-virtual-joystick)
+    - [7. GRBL pendant](#7-grbl-pendant)
 
 <!-- /code_chunk_output -->
 
@@ -74,9 +73,9 @@ No matter how you connect, they are all equivalent
 If you have already set the router SSID and password in step 1, you can skip this step
 
 + Connect the power supply for ESP8266(just 3v3,gnd,rx,tx)
-+ Log in to the access point **WIFI-ESP-SERIAL-xxxxxx** with any wifi-capable device and use the password **oseppesp**
++ Log in to the access point **WIFI-ESP-SERIAL-xxxxxx** with any wifi-capable device 
 + Use a web browser to open URL: <http://192.168.4.1/netstat>
-+ Select **your router access point** at `WIFI SSID` and fill your router  password in `WIFI Password` and chick nearby **update** button,esp8266 will restart so you will lose wifi connection,Wait a moment then re-Connect to the access point open URL: <http://192.168.4.1/netstat> again.For unknown reasons, usually you will see the IP address is 0.0.0.0, then you need to manually reset the ESP8266 to make it connect to the route correctly...
++ Select **your router access point** at `WIFI SSID` and fill your router  password in `WIFI Password` and chick nearby **update** button,esp8266 will restart so you will lose wifi connection,Wait a moment then re-Connect to the access point open URL: <http://192.168.4.1/netstat> again.For unknown reasons, usually you will see the IP address is 0.0.0.0, then you need to manually reset the ESP8266 to make it connect to the router correctly...
 + If ESP8266 has successfully connected to your router then it will show an IP address at the bottom of the page.
 + Set a new esp8266 access point name and password for security,Fill in **AP SSID**, and **AP PSWD**,Password is at least 8 letters or it will not work,Click nearby **update** button.
  ![ ](img/setupWIFI.PNG)
@@ -102,7 +101,7 @@ If you have already set the router SSID and password in step 1, you can skip thi
 ## 4. upload sketch to uno via OTA
 
 + Tool->Board->**Arduino Uno WiFi**
- *You can't use `Uno WiFi` features just to be able to use arduino OTA*
+ *You can't use `Uno WiFi` features, this is just to be able to upload using arduino OTA*
 + Tool->Port->Network ports->**your network device**
 + click **upload**
 + If you see the following text, the upload was successful
@@ -146,23 +145,8 @@ void loop() {
 + You can try to send msg to uno, reset uno
 + ![ ](img/webSerial.PNG)
 
-## 7. Using arduinoOTA and TCP Serial Monitors in oseppBlock
+## 7. GRBL Pendant
 
-+ Select the network device in the port list, or fill in the IP address.![ ](img/oseppBlockNetworkPort.PNG)
-+ Click on the upload icon to upload the sketch to UNO via OTA![ ](img/oseppBlockNetworkUpload.PNG)
-+ Click on the connection icon, you can see the following window, the same as the USB connection![ ](img/oseppBlock_connect2Serial.PNG)
+You can control your GRBL device (desktop CNC, laser engraver, plotter, etc...) if you navigate to http://<your_device_IP>/pendant.html
 
-
-## 8. Virtual Joystick
-
-+ Open `http://[esp8266 ip address]/joy` in web browser *phone, ipad, computer, any browser supporting HTML5*
-+ Add `?baudrate=nnnnnn` at the end of the URL to set the baud rate you want like `http://192.168.0.88/joy?baudrate=115200`
-+ Use mouse, or touch the screen with your finger and drag, support multi-touch (2 points)
-+ In oseppBlock, you can use Block  
- **Remote [Joy Channel]**  
- **Remote Timeout[*]**  
- To receive data and processing
-+ In the Arduino IDE, you can use our OseppRemote library
-
-![ ](img/virtualJoy1.png)
-![ ](img/virtualJoy2.png)
+![ ](img/Pendant.PNG)

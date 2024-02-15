@@ -41,6 +41,7 @@
             .led {
                 font-size: 12px;
                 line-height: 12px;
+                padding: 3px;
                 text-transform: uppercase;
             }
 
@@ -292,7 +293,7 @@
                 color: red;
             }
 
-            @media (max-width: 720px) {
+            @media (max-width: 600px) {
                 .title {
                     display: none;
                     text-transform: uppercase;
@@ -318,6 +319,11 @@
 
                 .unit {
                     display: none;
+                }
+
+                .led {
+                    font-size: 9px;
+                    padding: 2px;
                 }
 
                 .g,
@@ -369,6 +375,7 @@
                 }
 
                 .k.onoff i:before {
+                    font-size: 9px;
                     top: -2px;
                 }
             }

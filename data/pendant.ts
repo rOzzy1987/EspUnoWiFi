@@ -446,7 +446,7 @@ window.addEventListener('load', () => {
             const t = this;
             const s = t.status;
 
-            var k = e.target as HTMLElement;
+            var k = e.currentTarget as HTMLElement;
             const a = $.which(k, ['x', 'y', 'z']) as 'x' | 'y' | 'z';
             const i = $.sng('.ji input.' + s.jog.axis);
             const ia = $.sng('.ji input.' + a);
