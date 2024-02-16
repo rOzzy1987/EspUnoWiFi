@@ -1,3 +1,6 @@
+#ifndef __STK500_H__
+#define __STK500_H__
+
 //**** ATMEL AVR - A P P L I C A T I O N   N O T E  ************************
 //*
 //* Title:		AVR061 - STK500 Communication Protocol
@@ -101,3 +104,5 @@
 
 
 // *****************************[ End Of COMMAND.H ]**************************
+
+#endif // __STK500_H__
