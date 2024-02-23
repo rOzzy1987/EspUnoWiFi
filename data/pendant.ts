@@ -577,9 +577,9 @@ window.addEventListener('load', () => {
             const t = this;
             Ser.onMessage = (m) => t.parseMessage(m);
             Ser.onOpen = () => {
+                t.loadState();
                 t.init();
                 t.initJog();
-                t.loadState();
             };
             Ser.onClose = () => t.destroy();
             Ser.onError = () => t.destroy();
