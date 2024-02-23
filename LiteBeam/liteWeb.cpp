@@ -61,9 +61,12 @@ void init_web(
 /// @param c character to find
 /// @param n index to start  from
 /// @return substring to given character or the whole string if not found
-static String get_until_char(String *str, char c, unsigned int* n) {
-    unsigned int i = n[0];
-    unsigned int j = str->indexOf(c, n[0]);
+static String get_until_char(String *str, char c, int* n) {
+    int i = n[0];
+    int j = str->indexOf(c, n[0]);
+
+    if (i >= str->length())
+        return "";
 
     if (j < n[0]) {
         j = str->length();
@@ -92,7 +95,7 @@ static void setup_next_client() {
 /// @param reqStr the request query
 /// @param n will be set to the index to continue parsing from  
 /// @return the HTTP request method or "get" if not found (shouldn't be possible when using a browser)
-static String get_method(String *reqStr, unsigned int* n) {
+static String get_method(String *reqStr, int* n) {
     String s = get_until_char(reqStr, ' ', n);
     if (s.length() > 6)
         return "get";
@@ -103,19 +106,15 @@ static String get_method(String *reqStr, unsigned int* n) {
 /// @param reqStr the rquest query
 /// @param n the index to search from; will be set  to the end index + 1 
 /// @return the relative path of the HTTP query or "" if not found (shouldn't be possible when using a browser)
-static String get_path(String *reqStr, unsigned int* n) {
-
-    // finding the third slash in the URL (http://domain/path)
-    unsigned int i = n[0];
+static String get_path(String *reqStr, int* n) {
+    int i = n[0];
     i = reqStr->indexOf('/', i) + 1;
-    i = i <= 0 ? i : reqStr->indexOf('/', i) + 1;
-    i = i <= 0 ? i : reqStr->indexOf('/', i) + 1;
 
     if(i == 0) 
         return  "";
 
-    unsigned int j = reqStr->lastIndexOf('?');
-    if (j < i) {
+    int j = reqStr->lastIndexOf('?');
+    if (j < i) { 
         j = reqStr->lastIndexOf(' ');
         if (j < i)
             return "";
@@ -128,8 +127,8 @@ static String get_path(String *reqStr, unsigned int* n) {
 /// @param reqStr the rquest query
 /// @param n the index to search from; will be set  to the end index + 1 
 /// @return 
-static String get_query(String *reqStr, unsigned int* n) {
-    unsigned int i = reqStr->lastIndexOf(' ');
+static String get_query(String *reqStr, int* n) {
+    int i = reqStr->lastIndexOf(' ');
     if (i < n[0])
         return "";
 
@@ -140,7 +139,7 @@ static String get_query(String *reqStr, unsigned int* n) {
 /// @param q the query string
 /// @param n the index to start from
 /// @return the parameter name
-static String get_var_name(String *q, unsigned int* n) {
+static String get_var_name(String *q, int* n) {
     return get_until_char(q, '=', n);
 }
 
@@ -148,14 +147,19 @@ static String get_var_name(String *q, unsigned int* n) {
 /// @param q the query string
 /// @param n the index to start from
 /// @return the parameter value
-static String get_var_value(String *q, unsigned int* n) {
+static String get_var_value(String *q, int* n) {
     String raw = get_until_char(q, '&', n);
     int l = raw.length();
     char res[l + 1];
+    memset(res, 0, sizeof(res));
     int j = 0;
     for(int i  = 0; i < l; i++, j++ ) {
         if (raw[i] == '%')  {
-            res[j] = ((HexToByte(raw[++i]) << 4) | HexToByte(raw[++i]));
+            res[j] = 0;
+            i++;
+            res[j] |= HexToByte(raw[i]) << 4;
+            i++;
+            res[j] |= HexToByte(raw[i]);
         } else {
             res[j] = raw[i];
         }
@@ -169,7 +173,7 @@ static String get_var_value(String *q, unsigned int* n) {
 /// @param client the client to respond to
 static void handle_universal_queries(String *query, WiFiClient *client) {
     SettingsStruct *s = get_settings();
-    unsigned int n = 0;
+    int n = 0;
     while (n < query->length()){
         String name = get_var_name(query, &n);
         String val =  get_var_value(query, &n);
@@ -206,7 +210,7 @@ static void handle_upload(WiFiClient *client)  {
     int total_write;
     
     int handLen = handle_hex(&webServer, client, hexLen, &total_write);
-    Serial.begin(get_settings()->baudrate);
+    Serial.begin(get_settings()->baudrate_isp);
     if (handLen != hexLen) {
         String response("Upload Error!");
         if (handLen < 0) {
@@ -236,9 +240,10 @@ static void netstat_json(WiFiClient* wc) {
     int dlen = 
         (strlen(s->apssid) -2) +
         (strlen(s->ssid) -2) +
-        (strlen(s->appswd) -2);
+        (strlen(s->appswd) -2) +
+        (strlen(s->pswd) -2);
 
-    const char* json = R"=====({"ap": {"ssid": "%s", "password": "%s"}, "client": {"ssid": "%s", "password":""}, "status": {"available": [%s], "ip": "%s", "subnet": "%s", "gateway": "%s", "dns": "%s"}})=====";
+    const char* json = R"=====({"ap": {"ssid": "%s", "password": "%s"}, "client": {"ssid": "%s", "password":"%s"}, "status": {"available": [%s], "ip": "%s", "subnet": "%s", "gateway": "%s", "dns": "%s"}})=====";
 
     int n = WiFi.scanNetworks();
         
@@ -266,7 +271,7 @@ static void netstat_json(WiFiClient* wc) {
     dlen += dns.length() - 2;
 
     wc->printf(head_frm, 200, ctJson, strlen(json) + dlen);
-    wc->printf(json, s->apssid, s->appswd, s->ssid, available.c_str(),
+    wc->printf(json, s->apssid, s->appswd, s->ssid, s->pswd, available.c_str(),
                 localip.c_str(), subnet.c_str(), gateway.c_str(), dns.c_str());
 }
 
@@ -286,7 +291,7 @@ static void setssid(byte isAP, WiFiClient* wc) {
 
     line = wc->readString();
 
-    unsigned int n = 0;
+    int n = 0;
     while (n < line.length()){
         String name = get_var_name(&line, &n);
         String val =  get_var_value(&line, &n);
@@ -320,18 +325,20 @@ static void setssid(byte isAP, WiFiClient* wc) {
 void web_loop() {
     setup_next_client();
     
-    for (int i = 1; i <= CLIENT_ARR_SIZE; i++) {
+    for (int i = 0; i < CLIENT_ARR_SIZE; i++) {
         WiFiClient client = clients[(lastIdx + i) % CLIENT_ARR_SIZE];
         if (!client || !client.connected() || !client.available()) 
-            break;
+            continue;
         
         String s = client.readStringUntil('\n');
         s.toLowerCase();
 
-        unsigned int tmp = 0;
-        String method = get_method(&s, &tmp);
+        int tmp = 0;
+        String method = get_method(&s, &tmp);        
         String path = get_path(&s, &tmp);
         String query = get_query(&s, &tmp);
+
+
 
         // Technical actions
         handle_universal_queries(&query, &client);
