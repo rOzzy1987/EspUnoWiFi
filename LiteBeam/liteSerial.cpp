@@ -14,10 +14,6 @@ static void (*serial_callback) (byte* buff, unsigned int n);
 void init_serial(byte* buff, unsigned int size, void (*callback_fn) (byte* buff, unsigned int n)) {
     SettingsStruct *s = get_settings();
     Serial.begin(s->baudrate);
-    Serial.print("ssid:");
-    Serial.println(s->ssid);
-    Serial.print("pswd:");
-    Serial.println(s->pswd);
     serialBuff = buff;
     serialBuffSize = size;
     serial_callback = callback_fn;

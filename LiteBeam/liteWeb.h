@@ -2,11 +2,7 @@
 #define __LITEWEB_H__
 
 
-void init_web(
-    void (*reset_slave_fn)(),
-    void (*change_ap_fn)(),
-    void (*change_st_fn)(),
-    void (*update_mdns_fn)());
-void web_loop();
+void init_web(void (*reset_slave_fn)());
+void web_loop(bool is_captive = false);
 
 #endif // __LITEWEB_H__

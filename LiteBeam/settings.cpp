@@ -15,16 +15,19 @@ void save_eeprom() {
     EEPROM.commit();
 }
 
-void load_eeprom() {
+void load_eeprom(bool reset) {
     EEPROM.get(0, liteSettings);
 
-    if (liteSettings.flag[0] != FLAG_B0 || liteSettings.flag[1] != FLAG_B1) {
+    if (liteSettings.flag[0] != FLAG_B0 || liteSettings.flag[1] != FLAG_B1 || reset) {
         memset(&liteSettings, 0, sizeof(liteSettings));
         liteSettings.flag[0] = FLAG_B0;
         liteSettings.flag[1] = FLAG_B1;
 
 #ifdef DEFAULT_AP_SSID
-        strcpy(liteSettings.apssid, DEFAULT_AP_SSID);
+        if (strlen(AP_SSID) >= 2)
+            strcpy(liteSettings.apssid, DEFAULT_AP_SSID);
+        else
+            sprintf_P(liteSettings.apssid, PSTR("LiteBeam-%06x"), ESP.getChipId());
 #else
         sprintf_P(liteSettings.apssid, PSTR("LiteBeam-%06x"), ESP.getChipId());
 #endif

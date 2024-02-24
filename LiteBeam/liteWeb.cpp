@@ -40,19 +40,9 @@ static unsigned int lastIdx = 0;
 
 
 static void (*reset_slave)();
-static void (*change_ap)();
-static void (*change_st)();
-static void (*update_mdns)();
 
-void init_web(
-    void (*reset_slave_fn)(),
-    void (*change_ap_fn)(),
-    void (*change_st_fn)(),
-    void (*update_mdns_fn)()) {
+void init_web(void (*reset_slave_fn)()) {
     reset_slave = reset_slave_fn;
-    change_ap = change_ap_fn;
-    change_st = change_st_fn;
-    update_mdns = update_mdns_fn;
     webServer.begin();
 }
 
@@ -233,7 +223,6 @@ static void handle_upload(WiFiClient *client)  {
     }
 }
 
-
 static void netstat_json(WiFiClient* wc) {
     SettingsStruct *s = get_settings();
     wc->setTimeout(10000);
@@ -275,7 +264,6 @@ static void netstat_json(WiFiClient* wc) {
                 localip.c_str(), subnet.c_str(), gateway.c_str(), dns.c_str());
 }
 
-
 static void setssid(byte isAP, WiFiClient* wc) {
     SettingsStruct *s = get_settings();
     String line;
@@ -308,21 +296,17 @@ static void setssid(byte isAP, WiFiClient* wc) {
     if (isAP) {
         strcpy(s->apssid, tssid);
         strcpy(s->appswd, tpswd);
-        change_ap();
     } else {
         strcpy(s->ssid, tssid);
         strcpy(s->pswd, tpswd);
-        change_st();
     }
-    update_mdns();
     save_eeprom();
-
     while (wc->availableForWrite()) wc->flush();
-    ESP.reset();
+    ESP.restart();
 }
 
 
-void web_loop() {
+void web_loop(bool is_captive) {
     setup_next_client();
     
     for (int i = 0; i < CLIENT_ARR_SIZE; i++) {
@@ -337,8 +321,6 @@ void web_loop() {
         String method = get_method(&s, &tmp);        
         String path = get_path(&s, &tmp);
         String query = get_query(&s, &tmp);
-
-
 
         // Technical actions
         handle_universal_queries(&query, &client);
@@ -398,7 +380,11 @@ void web_loop() {
 
         // 404
         } else {
-            client.printf(head_frm, 404, ctPlain, 0);
+            if (is_captive) {
+                fileResponse(client, ctHtml, res_netstat_html);
+            } else {
+                client.printf(head_frm, 404, ctPlain, 0);
+            }
         }
         client.flush();
     }

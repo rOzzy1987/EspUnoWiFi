@@ -13,13 +13,24 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-// User defined settings
-#define OTA_PASSWORD "GrblOTA"              // ESP OTA Update password
-//#define DEFAULT_ST_SSID "HomeWifi"        // Your network ssid. 
-//#define DEAFULT_ST_PASSWORD "SecurePwd"   // Your network password (if any)
-//#define DEFAULT_AP_SSID "PrettyFly"       // Default AP network SSID
-//#define DEFAULT_AP_PASSWORD "ForAWiFi"    // Default AP network password
-//#define DEFAULT_HOSTNAME ""               // Default hostname for your device
+/////////////////////// Features ///////////////////////
+
+
+/////////////////////// User defined settings ///////////////////////
+#define OTA_PASSWORD "GrblOTA"              // ESP OTA Update password (Comment to disable)
+//#define OTA_PORT 8266                     // Custom ESP OTA port
+
+//#define DEFAULT_ST_SSID "PrettyFly"       // Your network ssid. 
+//#define DEAFULT_ST_PASSWORD "ForAWiFi"    // Your network password (if any)
+
+//#define DEFAULT_AP_SSID "LiteBeam"        // Default AP network SSID
+//#define DEFAULT_AP_PASSWORD ""            // Default AP network password (empty for open WiFi network)
+
+//#define DEFAULT_HOSTNAME "LiteBeam"       // Default hostname for your device
+//#define WIFI_DEBUG                        // Send serial messages to find out what WiFi network is hosted/being connected to 
+
+//#define WS_DEBUG                          // Prints a "connected X" message on Serial when a WebSocket connection is created
+
 #define RESET_PIN 2                         // GPIO2 on ESP01; Connect to arduino reset pin
 
 
@@ -58,19 +69,19 @@ void setup() {
     init_serial(dataBuffer, BUF_SIZE, handle_serial);
     init_wifi();
     
-    ArduinoOTA.begin(false);
 #ifdef OTA_PASSWORD
     ArduinoOTA.setPassword(OTA_PASSWORD);
 #endif
+#ifdef OTA_PORT
+    ArduinoOTA.setPort(OTA_PORT);
+#endif
+    ArduinoOTA.begin(false);
+    
     reset_arduino();
 
     stk500_init(reset_arduino);
 
-    init_web(
-        reset_arduino,
-        wifi_change_ap,
-        wifi_change_st,
-        mdns_update);
+    init_web(reset_arduino);
     init_msg(dataBuffer, BUF_SIZE);
     init_ws();
     init_udp(dataBuffer, BUF_SIZE);
@@ -79,12 +90,13 @@ void setup() {
 void loop() {
     ArduinoOTA.handle();
 
+    wifi_loop();
     mdns_loop();
     ws_loop();
     udp_loop();
     msg_loop();
     serial_loop();
-    web_loop();
+    web_loop(wifi_is_captive());
 }
 
 void handle_serial(byte* buff, unsigned int n) {

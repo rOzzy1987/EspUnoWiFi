@@ -54,7 +54,7 @@ void init_eeprom();
 
 void save_eeprom();
 
-void load_eeprom();
+void load_eeprom(bool reset = false);
 SettingsStruct* get_settings();
 
 #endif //__SETTINGS_H__
