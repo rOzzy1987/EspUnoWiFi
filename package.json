@@ -1,8 +1,8 @@
 {
-  "name": "espunowifi",
+  "name": "LiteBeam",
   "version": "1.0.0",
   "description": "ESP Arduino addon for GRBL applications",
-  "main": "./EspUnoWifi/EspUnoWifi.ino",
+  "main": "./LiteBeam/LiteBeam.ino",
   "scripts": {
     "prettify": "prettier ./data -w --config prettier.json",
     "tsc": "tsc",

@@ -91,19 +91,14 @@ async function main(args) {
 `);
 
     for(var file of files){
-        var m = /^([a-z]+):(.+)$/gmi.exec(file);
-        if(m) {
-            if (args.indexOf(m[1]) == -1){
-                console.log(`Skipping ${m[2]}`);
-                continue;
-            } else {
-                file = m[2];
-            }
+        if (file.args && file.args.every(a => args.indexOf(args) ==  -1)) {
+            console.log(`Skipping ${file.name}`);
+            continue;
         }
 
 
-        console.info(`Minifying ${file}`)
-        var path = await preprocess(file, args);
+        console.info(`Minifying ${file.name}`)
+        var path = await preprocess(file.name, args);
         const hndl = await fsAsync.stat(path);
         const mini = await minify(path, {js:{compress: {drop_console: true}}});
 
@@ -114,19 +109,23 @@ async function main(args) {
         origSize += so;
         minifiedSize += sm;
 
-        await fsAsync.writeFile(outdir+file, mini);
+        await fsAsync.writeFile(outdir+file.name, mini);
 
         ws.write(`
-// file:${file.padStart(24, ' ')}
+// file:${file.name.padStart(24, ' ')}
 // size:            ${so.toFixed().padStart(12, ' ')} bytes
 // compressed size: ${sm.toFixed().padStart(12, ' ')} bytes
 
-const char res_${file.replace('.', '_')}[] PROGMEM = R"=====(
+${file.features ? "#if " + (file.features.map(f => "defined("+f+")").join(' || ')) : ""}
+
+const char res_${file.name.replace('.', '_')}[] PROGMEM = R"=====(
 `);
 
         ws.write(mini)
         ws.write(`
 )=====";
+
+${file.features ? "#endif" : ""}
 
 `);
 
