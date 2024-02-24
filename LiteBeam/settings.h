@@ -17,24 +17,6 @@
 #define FLAG_B0 0x23
 #define FLAG_B1 0x3D
 
-
-// Service port defaults
-#ifndef SRV_WEB_PORT
-#define SRV_WEB_PORT 80
-#endif
-#ifndef SRV_MESSAGE_PORT
-#define SRV_MESSAGE_PORT 8080
-#endif
-#ifndef SRV_WS_PORT 
-#define SRV_WS_PORT 81
-#endif
-#ifndef SRV_UDP_PORT 
-#define SRV_UDP_PORT 82
-#endif
-
-
-
-
 #include <EEPROM.h>
 #include <Esp.h>
 

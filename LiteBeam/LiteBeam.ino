@@ -13,51 +13,39 @@
   along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-/////////////////////// Features ///////////////////////
-
-
-/////////////////////// User defined settings ///////////////////////
-#define OTA_PASSWORD "GrblOTA"              // ESP OTA Update password (Comment to disable)
-//#define OTA_PORT 8266                     // Custom ESP OTA port
-
-//#define DEFAULT_ST_SSID "PrettyFly"       // Your network ssid. 
-//#define DEAFULT_ST_PASSWORD "ForAWiFi"    // Your network password (if any)
-
-//#define DEFAULT_AP_SSID "LiteBeam"        // Default AP network SSID
-//#define DEFAULT_AP_PASSWORD ""            // Default AP network password (empty for open WiFi network)
-
-//#define DEFAULT_HOSTNAME "LiteBeam"       // Default hostname for your device
-//#define WIFI_DEBUG                        // Send serial messages to find out what WiFi network is hosted/being connected to 
-
-//#define WS_DEBUG                          // Prints a "connected X" message on Serial when a WebSocket connection is created
-
-#define RESET_PIN 2                         // GPIO2 on ESP01; Connect to arduino reset pin
-
-
+// Edit config.h to customize your firmware
+#include "config.h"
 
 #include <Arduino.h>
+
+#ifdef FEATURE_OTA
 #include <ArduinoOTA.h>
-#include <EEPROM.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-#include <WebSocketsServer.h>
-#include <WiFiUdp.h>
-#include <math.h>
-#include <pgmspace.h>
+#endif
 
 #include "favicon.h"
 #include "resources.h"
 #include "settings.h"
 
 #include "liteWeb.h"
-#include "liteMsg.h"
-#include "liteWs.h"         
-#include "liteWifi.h"
-#include "liteUdp.h"         
+#include "liteWifi.h"   
 #include "liteMdns.h"       
 #include "liteSerial.h"  
 
+#ifdef FEATURE_WS
+#include "liteWs.h"
+#endif         
+
+#ifdef FEATURE_TCP
+#include "liteTcp.h"
+#endif
+
+#ifdef FEATURE_UDP
+#include "liteUdp.h"
+#endif      
+
+#ifdef FEATURE_STK500
 #include "stk500impl.h"
+#endif
 
 
 
@@ -68,7 +56,8 @@ void setup() {
     init_eeprom();
     init_serial(dataBuffer, BUF_SIZE, handle_serial);
     init_wifi();
-    
+
+#ifdef FEATURE_OTA
 #ifdef OTA_PASSWORD
     ArduinoOTA.setPassword(OTA_PASSWORD);
 #endif
@@ -76,33 +65,56 @@ void setup() {
     ArduinoOTA.setPort(OTA_PORT);
 #endif
     ArduinoOTA.begin(false);
-    
+#endif // FEATURE_OTA
+
     reset_arduino();
 
+#ifdef FEATURE_STK500
     stk500_init(reset_arduino);
+#endif
 
     init_web(reset_arduino);
-    init_msg(dataBuffer, BUF_SIZE);
+#ifdef FEATURE_TCP
+    init_tcp(dataBuffer, BUF_SIZE);
+#endif
+#ifdef FEATURE_WS
     init_ws();
+#endif         
+#ifdef FEATURE_UDP
     init_udp(dataBuffer, BUF_SIZE);
+#endif
 }
 
 void loop() {
+#ifdef FEATURE_OTA
     ArduinoOTA.handle();
+#endif
 
     wifi_loop();
     mdns_loop();
+#ifdef FEATURE_WS
     ws_loop();
+#endif         
+#ifdef FEATURE_UDP
     udp_loop();
-    msg_loop();
+#endif
+#ifdef FEATURE_TCP
+    tcp_loop();
+#endif
     serial_loop();
     web_loop(wifi_is_captive());
 }
 
 void handle_serial(byte* buff, unsigned int n) {
+#ifdef FEATURE_UDP
     udp_send(buff, n);
-    msg_send(buff, n);
+#endif
+#ifdef FEATURE_TCP
+    tcp_send(buff, n);
+#endif
+#ifdef FEATURE_WS
     ws_send(buff, n);
+#endif         
 }
 
 void reset_arduino() {

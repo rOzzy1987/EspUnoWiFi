@@ -6,20 +6,17 @@
     "outdir": "min/",
     "outputFile": "./LiteBeam/resources.h",
     "files": [
-        "common.js",
-        "netstat.js",
-        "pendant.js",
-        "serial.js",
-        "serialmon.js",
-        "ui.js",
-
-        "debug:test.js",
-
-        "ui.css",
-
-        "netstat.html",
-        "pendant.html",
-        "redir.html",
-        "serial.html"
+        {"name": "common.js"},
+        {"name": "netstat.js"},
+        {"name": "pendant.js", "features": ["FEATURE_WS"]},
+        {"name": "serial.js", "features": ["FEATURE_WS"]},
+        {"name": "serialmon.js", "features": ["FEATURE_WS"]},
+        {"name": "ui.js"},
+        {"name": "test.js", "args": ["debug"]},
+        {"name": "ui.css"},
+        {"name": "netstat.html"},
+        {"name": "pendant.html", "features": ["FEATURE_WS"]},
+        {"name": "redir.html"},
+        {"name": "serial.html", "features": ["FEATURE_WS"]}
     ]
 }

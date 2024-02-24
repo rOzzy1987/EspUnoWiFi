@@ -1,6 +1,6 @@
 #include <WebSocketsServer.h>
 #include <Arduino.h>
-#include "settings.h"
+#include "config.h"
 #include "liteWs.h"
 
 static WebSocketsServer webSocket = WebSocketsServer(SRV_WS_PORT);

@@ -1,21 +1,21 @@
-#include "liteMsg.h"
+#include "liteTcp.h"
 #include <ESP8266WiFi.h>
-#include "settings.h"
+#include "config.h"
 #include "common.h"
 
-static WiFiServer msgServer(SRV_MESSAGE_PORT);
+static WiFiServer msgServer(SRV_TCP_PORT);
 static WiFiClient msgClient;
 
 static byte* msgBuff;
 static unsigned int msgBuffSize;
 
-void init_msg(byte* buff, unsigned int size) {
+void init_tcp(byte* buff, unsigned int size) {
     msgServer.begin();
     msgBuff = buff;
     msgBuffSize = size;
 }
 
-void msg_loop() {
+void tcp_loop() {
     unsigned int n;
     if (msgServer.hasClient()) {
         if (msgClient) 
@@ -33,7 +33,7 @@ void msg_loop() {
     }
 }
 
-void msg_send(const byte *buff, const unsigned int n) {
+void tcp_send(const byte *buff, const unsigned int n) {
     if (msgClient && msgClient.connected())
         msgClient.write(buff, n);
 }

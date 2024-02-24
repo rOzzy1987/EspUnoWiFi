@@ -1,14 +1,17 @@
 #include <ESP8266WiFi.h>
+#include "config.h"
 #include "common.h"
 #include "settings.h"
 #include "resources.h"
 #include "favicon.h"
 #include "liteWeb.h"
+#ifdef FEATURE_STK500
 #include "stk500impl.h"
+#endif
 
 #define CLIENT_ARR_SIZE 8
 
-// somehow null is added at the end so we decrease size by 1
+// decrease size by 1 because of null termination
 #define  fileResponse(wc, ctype, resource) wc.printf(head_frm, 200, ctype, sizeof(resource) - 1); \
                                            wc.write_P(resource, sizeof(resource) - 1);
 
@@ -184,6 +187,7 @@ static void handle_universal_queries(String *query, WiFiClient *client) {
     }
 }
 
+#ifdef FEATURE_STK500
 /// @brief Handle HEX uploads
 /// @param client the HTTP client to respond to
 static void handle_upload(WiFiClient *client)  {
@@ -222,6 +226,7 @@ static void handle_upload(WiFiClient *client)  {
         stringResponse(client[0], 200, response);
     }
 }
+#endif
 
 static void netstat_json(WiFiClient* wc) {
     SettingsStruct *s = get_settings();
@@ -334,8 +339,11 @@ void web_loop(bool is_captive) {
             String response("Reset OK!");
             response += millis();
             stringResponse(client, 200, response);
+        
+#ifdef FEATURE_STK500
         } else if (path == "pgm/upload") {
             handle_upload(&client);
+#endif
 
         // HTML content related
         } else if (path == "favicon.ico") {
@@ -345,12 +353,14 @@ void web_loop(bool is_captive) {
             fileResponse(client, ctJs, res_common_js);
         } else if (path == "netstat.js") {
             fileResponse(client, ctJs, res_netstat_js);
+#ifdef FEATURE_WS
         } else if (path == "pendant.js") {
             fileResponse(client, ctJs, res_pendant_js);
         } else if (path == "serial.js") {
             fileResponse(client, ctJs, res_serial_js);
         } else if (path == "serialmon.js") {
             fileResponse(client, ctJs, res_serialmon_js);
+#endif         
         } else if (path == "ui.js") {
             fileResponse(client, ctJs, res_ui_js);
 
@@ -359,12 +369,14 @@ void web_loop(bool is_captive) {
 
         } else if (path == "netstat.html") {
             fileResponse(client, ctHtml, res_netstat_html);
-        } else if (path == "pendant.html") {
-            fileResponse(client, ctHtml, res_pendant_html);
         } else if (path == "redir.html") {
             fileResponse(client, ctHtml, res_redir_html);
+#ifdef FEATURE_WS
+        } else if (path == "pendant.html") {
+            fileResponse(client, ctHtml, res_pendant_html);
         } else if ((path == "index") || (path == "") || (path == "serial.html")) {
             fileResponse(client, ctHtml, res_serial_html);
+#endif         
 
         // Configuration actions
         } else if ((path == "setap") && (method == "post")) {

@@ -1,7 +1,7 @@
 
 #include "liteUdp.h"
 #include <WiFiUdp.h>
-#include "settings.h"
+#include "config.h"
 #include "common.h"
 
 static WiFiUDP udp;
