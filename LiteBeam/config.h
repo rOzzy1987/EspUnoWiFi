@@ -6,8 +6,8 @@
 #define FEATURE_OTA                         // ESP OTA
 #define FEATURE_STK500                      // Arduino OTA (experimental)
 #define FEATURE_WS                          // WebSocket to serial bridge, including web serial monitor and GRBL pendant (come on, this is the heart of the project, don't disable it)
-//#define FEATURE_UDP                         // UDP to serial bridge
-//#define FEATURE_TCP                         // TCP to serial bridge
+#define FEATURE_UDP                         // UDP to serial bridge
+#define FEATURE_TCP                         // TCP to serial bridge
 
 /////////////////////// User defined settings ///////////////////////
 #define OTA_PASSWORD "GrblOTA"              // ESP OTA Update password (Comment to disable)
@@ -27,11 +27,14 @@
 #define SRV_TCP_PORT 8080
 #define SRV_WS_PORT 81
 #define SRV_UDP_PORT 82
+#define SRV_DNS_PORT 53
 
 
 /////////////////////// Debugging ///////////////////////
 //#define WIFI_DEBUG                        // Send serial messages to find out what WiFi network is hosted/being connected to 
+//#define WEB_DEBUG                         // Prints information on the serial console about each web request
 //#define WS_DEBUG                          // Prints a "connected X" message on Serial when a WebSocket connection is created
+//#define LOOP_DEBUG                        // Prints timing info of different loop tasks (WARNING: it prints a LOT)
 
 /////////////////////// Pinout ///////////////////////
 #define RESET_PIN 2                         // GPIO2 on ESP01; Connect to arduino reset pin

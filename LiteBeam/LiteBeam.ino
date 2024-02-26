@@ -64,7 +64,7 @@ void setup() {
 #ifdef OTA_PORT
     ArduinoOTA.setPort(OTA_PORT);
 #endif
-    ArduinoOTA.begin(false);
+    ArduinoOTA.begin();
 #endif // FEATURE_OTA
 
     reset_arduino();
@@ -86,23 +86,38 @@ void setup() {
 }
 
 void loop() {
+    static unsigned long st, ota,wifi, mdns, ws, udp, tcp, serial, web; 
+    st = millis();
 #ifdef FEATURE_OTA
     ArduinoOTA.handle();
+    ota = millis();
 #endif
-
     wifi_loop();
+    wifi = millis();
     mdns_loop();
+    mdns = millis();
 #ifdef FEATURE_WS
     ws_loop();
+    ws = millis();
 #endif         
 #ifdef FEATURE_UDP
     udp_loop();
+    udp = millis();
 #endif
 #ifdef FEATURE_TCP
     tcp_loop();
+    tcp = millis();
 #endif
     serial_loop();
+    serial = millis();
     web_loop(wifi_is_captive());
+    web = millis();
+
+#ifdef LOOP_DEBUG
+#define t(x) (x > 0 ? x - st : 0)
+    Serial.printf("O:%05d Wf:%05d mD:%05d Ws:%05d U:%05d T:%05d S:%05d Wb:%05d\n", t(ota), t(wifi), t(mdns), t(ws), t(udp), t(tcp), t(serial), t(web));
+    delay(300);
+#endif
 }
 
 void handle_serial(byte* buff, unsigned int n) {

@@ -6,7 +6,7 @@
 
 static WiFiUDP udp;
 static IPAddress udpAddress;
-static IPAddress emptyAddress(0x00000000);
+static IPAddress emptyAddress(0,0,0,0);
 static unsigned int udpPort = 0;
 static unsigned long udpLast = 0;
 

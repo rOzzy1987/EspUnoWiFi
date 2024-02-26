@@ -1,7 +1,14 @@
 #include "liteTcp.h"
-#include <ESP8266WiFi.h>
+#include <Esp.h>
 #include "config.h"
 #include "common.h"
+
+
+#ifdef ESP32
+#include <Wifi.h>
+#else // ESP8266
+#include <ESP8266WiFi.h>
+#endif
 
 static WiFiServer msgServer(SRV_TCP_PORT);
 static WiFiClient msgClient;

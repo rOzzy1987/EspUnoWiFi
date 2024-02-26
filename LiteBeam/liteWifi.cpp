@@ -1,10 +1,19 @@
+#include <Esp.h>
 
+#ifdef ESP32
+#include <Wifi.h>
+static wifi_mode_t mode;
+#else // ESP8266
 #include <ESP8266WiFi.h>
+static WiFiMode mode;
+#endif
+
 #include <DNSServer.h>
+#include "config.h"
 #include "settings.h"
 #include "liteWifi.h"
 
-static WiFiMode mode;
+
 static DNSServer* dns;
 
 static IPAddress captiveIp(192,168,4,1);
@@ -20,7 +29,7 @@ void wifi_init_ap() {
         if (dns == NULL){
             dns = new DNSServer();
         }
-        dns->start(IANA_DNS_PORT, "*", captiveIp);
+        dns->start(SRV_DNS_PORT, "*", captiveIp);
 
         WiFi.softAPConfig(captiveIp, captiveIp, subnetMask);
 

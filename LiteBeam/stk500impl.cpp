@@ -1,6 +1,13 @@
-#include <Arduino.h>
+#include <Esp.h>
 #include <ArduinoOTA.h>
+
+
+#ifdef ESP32
+#include <Wifi.h>
+#else // ESP8266
 #include <ESP8266WiFi.h>
+#endif
+
 #include "stk500.h"
 #include "settings.h"
 #include "common.h"

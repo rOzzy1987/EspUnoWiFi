@@ -1,10 +1,18 @@
+#include <Esp.h>
+
+#ifdef ESP32
+#include <Wifi.h>
+#else //ESP8266
 #include <ESP8266WiFi.h>
+#endif
+
 #include "config.h"
 #include "common.h"
 #include "settings.h"
 #include "resources.h"
 #include "favicon.h"
 #include "liteWeb.h"
+
 #ifdef FEATURE_STK500
 #include "stk500impl.h"
 #endif
@@ -326,6 +334,10 @@ void web_loop(bool is_captive) {
         String method = get_method(&s, &tmp);        
         String path = get_path(&s, &tmp);
         String query = get_query(&s, &tmp);
+
+#ifdef WEB_DEBUG
+        Serial.printf("Incoming request:\n Method: %s\n Path:   %s\n Query:  %s\n-------------------", method.c_str(), path.c_str(), query.c_str());
+#endif
 
         // Technical actions
         handle_universal_queries(&query, &client);
